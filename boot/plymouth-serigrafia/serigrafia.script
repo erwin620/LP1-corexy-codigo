@@ -1,0 +1,21 @@
+# Tema de arranque de la maquina de serigrafia (feature 008, 2026-08-19)
+#
+# Una sola imagen fija, centrada, sin animacion ni texto: es lo que pidio
+# Erwin y es lo correcto para una maquina de produccion. Nada de barras de
+# progreso ni mensajes que el cliente no debe ver.
+#
+# La imagen es 1024x600 y el monitor tambien (card1-HDMI-A-1), asi que se
+# dibuja PIXEL A PIXEL. El centrado de abajo es por si algun dia cambia el
+# monitor: con otra resolucion la imagen queda centrada en vez de deformada.
+# NO se escala a proposito: escalar una imagen de marca la vuelve borrosa.
+
+# Fondo negro. Con el monitor actual no se ve (la imagen lo cubre entero),
+# pero si algun dia el monitor fuera mayor, el borde queda negro y limpio.
+Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
+Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
+
+imagen = Image("splash.png");
+sprite = Sprite(imagen);
+sprite.SetX(Window.GetWidth()  / 2 - imagen.GetWidth()  / 2);
+sprite.SetY(Window.GetHeight() / 2 - imagen.GetHeight() / 2);
+sprite.SetZ(0);

@@ -1,0 +1,113 @@
+# ============================================================
+# .gitignore  -  qué NO entra al repositorio
+# ------------------------------------------------------------
+# Git guarda TODA la historia para siempre. Lo que entra en un commit
+# se queda en el repo aunque después lo borres, así que este archivo
+# es una de las cosas más importantes del proyecto.
+#
+# Regla de oro: al repo va lo que ESCRIBE UNA PERSONA.
+# No va nada que (a) se pueda regenerar con un comando,
+# (b) sea un secreto, o (c) sea específico de una máquina.
+# ============================================================
+
+
+# --- 1. SECRETOS -- NUNCA, JAMÁS -----------------------------
+# opencode.json lleva una API key real (sk-...). Si esto entrara en un
+# commit, la clave quedaría en la historia PARA SIEMPRE, incluso
+# borrando el archivo después: habría que rotar la clave.
+opencode.json
+
+# Por si algún día aparecen otros
+*.pem
+*.key
+id_rsa
+id_ed25519
+.env
+.env.*
+secrets.json
+credentials.json
+
+
+# --- 2. ARTEFACTOS DE COMPILACIÓN -- se regeneran -----------
+# Esto era 511 MB de los 790 MB del proyecto: objetos, binarios y
+# cachés de PlatformIO. Se vuelven a generar compilando, así que
+# guardarlos solo hace el repo enorme y lento para siempre.
+.pio/
+.pioenvs/
+.piolibdeps/
+build/
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+*.map
+__pycache__/
+*.pyc
+
+
+# --- 3. COSAS DE UNA MÁQUINA CONCRETA -----------------------
+# Ajustes locales del editor o de la herramienta: cambian de un equipo
+# a otro y provocarían conflictos sin aportar nada.
+.claude/settings.local.json
+.vscode/
+.idea/
+
+
+# --- 4. BASURA DEL SISTEMA OPERATIVO ------------------------
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+
+
+# --- 5. TEMPORALES ------------------------------------------
+*.tmp
+*.temp
+*.log
+*.bak
+*~
+
+
+# --- 6. REPOS DE GIT AJENOS ANIDADOS ------------------------
+# _legacy/Marlin y _legacy/Configurations NO son carpetas normales:
+# son CLONES de los repos oficiales de Marlin, cada uno con su propio
+# .git (39 MB y 42 MB de historia ajena).
+#
+# Al intentar añadirlos, git avisó "adding embedded git repository" y los
+# metió como PUNTEROS VACÍOS (gitlinks): el commit habría guardado dos
+# referencias colgando, SIN los archivos. Peor que incluirlos o excluirlos,
+# porque parece que están y no están.
+#
+# Se quedan FUERA a propósito:
+#   - Son código de terceros, congelado, que ya tiene su propia historia.
+#   - Este repo es para el trabajo de Erwin: bitácora, spec, config.
+#   - Siguen en el disco y OneDrive los respalda; no se pierde nada.
+# Si algún día hicieran falta dentro, la forma correcta es un submódulo
+# (git submodule add ...), no copiarlos a pelo.
+_legacy/Marlin/
+_legacy/Configurations/
+
+# SÍ entra _legacy/secuenciador/ : es código propio (Teensy/ESP32), no un
+# clon ajeno, y la bitácora lo cita como referencia del ciclo validado.
+
+
+# ============================================================
+# RECORDATORIO: la historia de git es PERMANENTE.
+# Lo que entre en un commit se queda, aunque después se borre el archivo.
+# Por eso este archivo se escribe ANTES del primer commit y no después.
+# ============================================================
+
+
+# --- 7. BACKUPS MANUALES DE LA PI ---------------------------
+# En ~/printer_data/config/ de la Pi hay ~59 archivos con el patron
+#   printer.cfg.bak.<motivo>.<fecha>
+# Son el control de versiones hecho a mano que git viene a reemplazar.
+# Se quedan en la Pi como red de seguridad inmediata; la historia larga
+# la lleva git. Meterlos aqui seria guardar el mismo contenido decenas
+# de veces.
+# Ojo: el patron *.bak de arriba NO los cazaria, porque llevan texto
+# despues del .bak.
+*.bak.*

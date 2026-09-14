@@ -1,0 +1,36 @@
+# ============================================================
+# .gitattributes  -  finales de linea
+# ------------------------------------------------------------
+# core.autocrlf esta en 'true' en este equipo (Windows), asi que git
+# convierte a CRLF al sacar los archivos del repo. Para la documentacion
+# eso da igual, pero para los archivos QUE SE DESPLIEGAN A LA PI es un
+# problema real:
+#
+#  1. Un clon nuevo en Windows dejaria pi-config/*.cfg con CRLF, y
+#     desplegar eso a Klipper mete un \r al final de cada linea. En un
+#     bloque gcode: ese \r puede acabar DENTRO de una cadena y salir en
+#     los mensajes M118, o pegado a un valor.
+#  2. Ensuciaba el diff: al refrescar el espejo desde la Pi (que manda
+#     LF) git marcaba los archivos como modificados SIN que hubiera
+#     ningun cambio de contenido. Eso rompe justo la senal que hace util
+#     tener el espejo: "git status me dice que cambio en la maquina".
+#     Se comprobo el 2026-08-19 que el contenido era byte a byte
+#     identico y aun asi salia " M".
+#
+# Por eso: todo lo que se despliegue a la Pi se guarda y se saca en LF.
+# ============================================================
+
+# Por defecto, que git detecte texto y normalice a LF en el repo
+* text=auto eol=lf
+
+# LOS QUE SE DESPLIEGAN A LA PI: LF siempre, sin excepcion
+pi-config/**  text eol=lf
+ui/*.html     text eol=lf
+
+# Binarios: que git no los toque
+*.png binary
+*.jpg binary
+*.pdf binary
+*.hex binary
+*.bin binary
+*.elf binary

@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#eef2f8">
+<title>Serigrafía — Operador</title>
+<style>
+  :root{
+    --txt:#1e2a38; --muted:#5c6b7e; --muted2:#93a1b2;
+    --glass:rgba(255,255,255,.52); --glass2:rgba(255,255,255,.74); --stroke:rgba(255,255,255,.7);
+    --hair:rgba(30,45,65,.10); --shadow:0 1.2vmin 4vmin rgba(30,45,65,.14);
+    --hi:inset 0 1px 0 rgba(255,255,255,.9);
+    --blur:saturate(180%) blur(16px);
+    --accent:#0a84ff; --green:#17a06a; --red:#e5484d; --amber:#e0972b; --cyan:#159fb8;
+    --ok:#17a06a; --bad:#e5484d; --warn:#e0972b;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ margin:0; height:100%; overflow:hidden; touch-action:manipulation; color:var(--txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;
+    background:linear-gradient(135deg,#f4f7fc,#e9eff8); }
+  /* fondo de blobs de color (le da al vidrio algo que refractar) */
+  #bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; }
+  .blob{ position:absolute; width:52vmax; height:52vmax; border-radius:50%; filter:blur(60px); opacity:.55; }
+  .b1{ background:#8ec5ff; top:-16vmax; left:-10vmax; animation:f1 24s ease-in-out infinite alternate; }
+  .b2{ background:#c9b6ff; top:-12vmax; right:-14vmax; animation:f2 28s ease-in-out infinite alternate; }
+  .b3{ background:#9af0cd; bottom:-18vmax; left:-8vmax; animation:f3 26s ease-in-out infinite alternate; }
+  .b4{ background:#ffd6ad; bottom:-16vmax; right:-12vmax; animation:f4 30s ease-in-out infinite alternate; }
+  @keyframes f1{ to{ transform:translate(8vmax,6vmax) scale(1.1); } }
+  @keyframes f2{ to{ transform:translate(-7vmax,8vmax) scale(1.15); } }
+  @keyframes f3{ to{ transform:translate(9vmax,-6vmax) scale(1.1); } }
+  @keyframes f4{ to{ transform:translate(-8vmax,-7vmax) scale(1.12); } }
+
+  #app{ height:100%; display:grid; grid-template-rows:auto auto 1fr auto; }
+  .glass{ background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
+
+  /* ---------- TOP ---------- */
+  #top{ display:flex; align-items:center; gap:2vmin; padding:1.8vmin 2.6vmin; border-bottom:1px solid var(--hair);
+    background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); }
+  #clock{ font-variant-numeric:tabular-nums; font-weight:700; font-size:3.6vmin; letter-spacing:.05em; color:var(--txt);
+    padding:1vmin 2.2vmin; border-radius:100px; min-width:22vmin; text-align:center;
+    background:var(--glass2); border:1px solid var(--stroke); box-shadow:var(--hi); }
+  #title{ flex:1; text-align:center; font-size:4.2vmin; font-weight:800; letter-spacing:.2em; color:#152233; }
+  #title small{ display:block; font-size:2vmin; font-weight:600; letter-spacing:.34em; color:var(--muted); margin-top:.3vmin; }
+  .pill{ display:inline-flex; align-items:center; gap:1.4vmin; padding:1.2vmin 2.4vmin; border-radius:100px;
+    font-size:2.7vmin; font-weight:600; color:var(--muted); white-space:nowrap; min-width:22vmin; justify-content:center;
+    background:var(--glass2); border:1px solid var(--stroke); box-shadow:var(--hi); }
+  .pill .dot{ width:2.2vmin; height:2.2vmin; border-radius:50%; background:var(--muted2); }
+  .pill.ok{ color:#0f7a4f; } .pill.ok .dot{ background:var(--ok); box-shadow:0 0 1.4vmin rgba(23,160,106,.7); animation:breathe 2.4s ease-in-out infinite; }
+  .pill.bad{ color:#b3363a; } .pill.bad .dot{ background:var(--bad); box-shadow:0 0 1.2vmin rgba(229,72,77,.7); }
+  @keyframes breathe{ 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ---------- STATUS ---------- */
+  #statuswrap{ padding:1.8vmin 2.6vmin 0; }
+  #status{ position:relative; overflow:hidden; display:flex; align-items:center; gap:2vmin; padding:2vmin 2.6vmin;
+    border-radius:2.4vmin; font-size:3.2vmin; font-weight:600; color:var(--txt);
+    background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
+  #status .sdot{ width:2.6vmin; height:2.6vmin; border-radius:50%; background:var(--muted2); flex:0 0 auto; }
+  #status.run .sdot{ background:var(--accent); box-shadow:0 0 1.6vmin rgba(10,132,255,.7); }
+  #status.idle .sdot{ background:var(--ok); } #status.warn .sdot{ background:var(--warn); }
+  #status.run::after{ content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(90deg, transparent, rgba(10,132,255,.14), transparent);
+    transform:translateX(-100%); animation:sweep 1.9s linear infinite; }
+  @keyframes sweep{ to{ transform:translateX(100%); } }
+
+  /* ---------- CENTER ---------- */
+  #content{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3vmin; padding:2.4vmin; min-height:0; }
+  #counters{ display:flex; gap:3vmin; }
+  .counter{ min-width:30vmin; text-align:center; padding:1.8vmin 3vmin 2.2vmin; border-radius:2.6vmin; position:relative;
+    background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
+  .counter .clab{ font-size:2.4vmin; letter-spacing:.2em; color:var(--muted); font-weight:700; }
+  .counter .cval{ font-size:8.5vmin; line-height:1.05; font-weight:800; font-variant-numeric:tabular-nums; color:#152233; }
+  .counter.meta .cval{ color:var(--accent); }
+  .counter.edit{ cursor:pointer; }
+  .counter.edit::after{ content:""; position:absolute; top:1.6vmin; right:1.6vmin; width:3vmin; height:3vmin; opacity:.7;
+    background:no-repeat center/contain url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a84ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 20h9'/><path d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/></svg>"); }
+  .counter.edit:active{ filter:brightness(1.04); transform:scale(.99); }
+
+  #bigbtn{ position:relative; width:min(74vmin,84vw); height:min(30vh,34vmin); border:none; border-radius:4vmin;
+    cursor:pointer; color:#fff; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:3vmin;
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); box-shadow:var(--shadow),var(--hi);
+    background:rgba(255,255,255,.40); transition:transform .09s ease, filter .09s ease; }
+  #bigbtn::before{ content:""; position:absolute; top:0; left:6%; width:64%; height:44%; border-radius:50%;
+    background:linear-gradient(180deg, rgba(255,255,255,.5), transparent); filter:blur(3px); }
+  #bigbtn:active:not(:disabled){ transform:scale(.975); filter:brightness(.96); }
+  #bigbtn:disabled{ cursor:default; color:var(--muted2); background:rgba(255,255,255,.40); }
+  #bigbtn .ico{ width:11vmin; height:11vmin; } #bigbtn .ico svg{ width:100%; height:100%; filter:drop-shadow(0 .2vmin .6vmin rgba(0,0,0,.35)); }
+  #bigbtn .lbl{ font-size:9vmin; font-weight:800; letter-spacing:.05em; text-shadow:0 .3vmin 1vmin rgba(0,0,0,.32); }
+  .b-start{ background:linear-gradient(135deg, rgba(52,211,153,.40), rgba(20,160,105,.40)) !important;
+    box-shadow:0 1.6vmin 4.4vmin rgba(20,160,105,.30), var(--hi) !important; }
+  .b-stop{ background:linear-gradient(135deg, rgba(255,120,120,.40), rgba(214,45,50,.40)) !important;
+    box-shadow:0 1.6vmin 4.4vmin rgba(214,45,50,.32), var(--hi) !important; }
+  #ring{ position:absolute; width:min(74vmin,84vw); height:min(30vh,34vmin); border-radius:4vmin; pointer-events:none; display:none; }
+  #content.running #ring{ display:block; animation:pulse 1.5s ease-out infinite; }
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(229,72,77,.45)} 70%{box-shadow:0 0 0 6vmin rgba(229,72,77,0)} 100%{box-shadow:0 0 0 0 rgba(229,72,77,0)} }
+  .btnstack{ position:relative; display:flex; align-items:center; justify-content:center; }
+
+  /* ---------- BOTTOM ---------- */
+  #bottom{ display:flex; gap:2vmin; padding:2vmin 2.6vmin calc(2vmin + env(safe-area-inset-bottom)); border-top:1px solid var(--hair); }
+  .navbtn{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.8vmin;
+    padding:1.8vmin 1vmin; border-radius:2.2vmin; cursor:pointer; color:var(--txt); font-weight:700; font-size:3vmin; letter-spacing:.05em;
+    background:rgba(255,255,255,.40); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); transition:transform .08s ease, filter .08s ease; }
+  .navbtn:active:not(.dis){ transform:scale(.96); filter:brightness(1.04); }
+  .navbtn .ico{ width:6.4vmin; height:6.4vmin; } .navbtn .ico svg{ width:100%; height:100%; }
+  .navbtn.dis{ opacity:.45; cursor:default; }
+  .navbtn.home  .ico svg{ stroke:var(--amber); } .navbtn.home{ color:#8a6414; }
+  .navbtn.disable .ico svg{ stroke:var(--cyan); } .navbtn.disable{ color:#0d6b7c; }
+  .navbtn.menu .ico svg,.navbtn.stats .ico svg{ stroke:#3a4a5e; }
+  #btn-stats{ margin-left:auto; }
+
+  /* ---------- MODAL ---------- */
+  #modal{ position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; padding:4vmin;
+    background:rgba(20,32,48,.28); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+  #modal.hidden{ display:none; }
+  .card{ width:min(122vmin,94vw); max-height:92vh; overflow:auto; border-radius:3vmin; color:var(--txt);
+    background:var(--glass2); -webkit-backdrop-filter:saturate(180%) blur(24px); backdrop-filter:saturate(180%) blur(24px);
+    border:1px solid var(--stroke); box-shadow:0 3vmin 8vmin rgba(20,32,48,.3), var(--hi); }
+  .card h2{ margin:0; padding:2.6vmin 3vmin; font-size:4vmin; letter-spacing:.04em; border-bottom:1px solid var(--hair);
+    display:flex; align-items:center; justify-content:space-between; }
+  .card .body{ padding:2.2vmin 3vmin; } .card .foot{ padding:2vmin 3vmin 3vmin; display:flex; gap:2vmin; justify-content:flex-end; }
+  .mbtn{ border:none; border-radius:1.8vmin; padding:2vmin 3.4vmin; font-size:3.4vmin; font-weight:700; color:#fff; cursor:pointer;
+    background:var(--accent); box-shadow:var(--hi); }
+  .mbtn:active{ filter:brightness(.92); }
+  .mbtn.ghost{ background:var(--glass2); border:1px solid var(--stroke); color:var(--txt); }
+  .mbtn.warn{ background:var(--amber); } .mbtn.sm{ font-size:3vmin; padding:1.6vmin 2.6vmin; }
+
+  .subhead{ font-size:2.6vmin; letter-spacing:.16em; color:var(--muted); font-weight:700; margin:2.4vmin 0 .4vmin; text-transform:uppercase; }
+  .srow{ display:flex; align-items:center; justify-content:space-between; gap:2vmin; padding:1.8vmin 0; border-bottom:1px solid var(--hair); }
+  .srow:last-child{ border-bottom:none; }
+  .srow .k{ font-size:3.2vmin; font-weight:600; } .srow .k small{ display:block; font-size:2.2vmin; color:var(--muted); font-weight:500; }
+  .stepper{ display:flex; align-items:center; gap:1.4vmin; }
+  .stepper button{ width:9vmin; height:9vmin; border-radius:1.6vmin; border:1px solid var(--stroke); background:var(--glass2);
+    color:var(--txt); font-size:5vmin; font-weight:800; cursor:pointer; line-height:1; box-shadow:var(--hi); }
+  .stepper button:active{ filter:brightness(.94); }
+  .stepper .sv{ min-width:18vmin; text-align:center; font-size:4vmin; font-weight:800; font-variant-numeric:tabular-nums; }
+  .toggle{ display:flex; border:1px solid var(--stroke); border-radius:1.6vmin; overflow:hidden; box-shadow:var(--hi); }
+  .toggle button{ padding:1.8vmin 2.6vmin; font-size:3vmin; font-weight:700; border:none; background:var(--glass2); color:var(--muted); cursor:pointer; }
+  .toggle button.on{ background:var(--accent); color:#fff; }
+  .note{ font-size:2.6vmin; color:var(--muted); padding:1vmin 0 0; }
+  .stat{ display:flex; justify-content:space-between; padding:2vmin 0; border-bottom:1px solid var(--hair); font-size:3.4vmin; }
+  .stat:last-child{ border-bottom:none; } .stat .v{ font-weight:800; }
+
+  /* ---------- OVERLAY ---------- */
+  #overlay{ position:fixed; inset:0; z-index:40; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4vmin;
+    background:rgba(244,247,252,.62); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); transition:opacity .25s ease; }
+  #overlay.hidden{ opacity:0; pointer-events:none; }
+  .spinner{ width:16vmin; height:16vmin; border-radius:50%; border:1.4vmin solid rgba(30,45,65,.14); border-top-color:var(--accent); animation:spin 1s linear infinite; }
+  #overlay.err .spinner{ border:1.4vmin solid rgba(229,72,77,.2); border-top-color:var(--bad); animation:none; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  #ovtext{ font-size:4.2vmin; font-weight:700; text-align:center; padding:0 6vmin; color:var(--txt); }
+  #ovsub{ font-size:3vmin; color:var(--muted); text-align:center; padding:0 6vmin; margin-top:-1.6vmin; }
+
+  /* ---------- PANTALLA DE TALLAS (feature 004) ---------- */
+  .navbtn.sizes .ico svg{ stroke:var(--accent); } .navbtn.sizes{ color:#0a5fbf; }
+  #sizes{ position:fixed; inset:0; z-index:20; display:grid; grid-template-rows:auto auto 1fr;
+    background:linear-gradient(135deg,#f4f7fc,#e9eff8); }
+  #sizes.hidden{ display:none; }
+  #sz-top{ display:flex; align-items:center; gap:2vmin; padding:1.8vmin 2.6vmin; border-bottom:1px solid var(--hair);
+    background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); }
+  #sz-title{ flex:1; text-align:center; font-size:4.2vmin; font-weight:800; letter-spacing:.2em; color:#152233; }
+  #sz-title small{ display:block; font-size:2vmin; font-weight:600; letter-spacing:.34em; color:var(--muted); margin-top:.3vmin; }
+  #sz-back{ padding:1.6vmin 3vmin; border-radius:100px; border:1px solid var(--stroke); min-width:22vmin;
+    background:var(--glass2); box-shadow:var(--hi); font-size:3vmin; font-weight:700; color:var(--txt); cursor:pointer; }
+  #sz-back:active{ transform:scale(.96); filter:brightness(.96); }
+  #sz-statuswrap{ padding:1.8vmin 2.6vmin 0; }
+  #sz-status{ display:flex; align-items:center; gap:2vmin; padding:2vmin 2.6vmin; border-radius:2.4vmin;
+    font-size:3.2vmin; font-weight:600; color:var(--txt);
+    background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
+  #sz-status .sdot{ width:2.6vmin; height:2.6vmin; border-radius:50%; background:var(--muted2); flex:0 0 auto; }
+  #sz-status.ok .sdot{ background:var(--ok); }
+  #sz-status.warn .sdot{ background:var(--warn); box-shadow:0 0 1.4vmin rgba(224,151,43,.7); }
+  #sz-body{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3vmin; padding:2.4vmin; min-height:0; }
+  #sz-home{ width:min(74vmin,84vw); padding:2.8vmin; border:none; border-radius:3vmin; cursor:pointer; color:#fff;
+    font-size:5vmin; font-weight:800; letter-spacing:.06em; text-shadow:0 .3vmin 1vmin rgba(0,0,0,.32);
+    background:linear-gradient(135deg, rgba(240,175,60,.55), rgba(200,130,20,.55));
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); box-shadow:var(--shadow),var(--hi);
+    transition:transform .09s ease, filter .09s ease; }
+  #sz-home:active:not(:disabled){ transform:scale(.975); filter:brightness(.96); }
+  #sz-home:disabled{ cursor:default; color:var(--muted2); background:rgba(255,255,255,.40); text-shadow:none; }
+  #sz-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2.2vmin; width:min(98vmin,94vw); }
+  .szbtn{ padding:3.6vmin 1vmin; border-radius:2.4vmin; border:1px solid var(--stroke); cursor:pointer;
+    font-size:6vmin; font-weight:800; letter-spacing:.03em; color:#152233;
+    background:rgba(255,255,255,.46); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    box-shadow:var(--shadow),var(--hi); transition:transform .08s ease, filter .08s ease; }
+  .szbtn:active:not(:disabled){ transform:scale(.96); filter:brightness(1.05); }
+  .szbtn.on{ background:linear-gradient(135deg, rgba(10,132,255,.58), rgba(0,90,200,.58)); color:#fff;
+    text-shadow:0 .2vmin .8vmin rgba(0,0,0,.3); }
+  .szbtn:disabled{ opacity:.32; cursor:default; }
+  #sz-current{ font-size:3vmin; font-weight:700; color:var(--muted); letter-spacing:.12em; display:flex; align-items:center; }
+  #sz-current b{ color:var(--accent); font-size:5vmin; margin-left:1.8vmin; letter-spacing:.02em; }
+</style>
+</head>
+<body>
+<div id="bg"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span></div>
+
+<div id="app">
+  <header id="top">
+    <div id="clock">--:--:--</div>
+    <div id="title">AUTOMÁTICO<small>SERIGRAFÍA</small></div>
+    <div id="conn" class="pill"><span class="dot"></span><span id="conntext">Conectando…</span></div>
+  </header>
+
+  <div id="statuswrap"><div id="status"><span class="sdot"></span><span id="statustext">—</span></div></div>
+
+  <main id="content">
+    <div id="counters">
+      <div class="counter"><div class="clab" data-i18n="lbl_cycles">CICLOS</div><div class="cval" id="c-count">0</div></div>
+      <div class="counter meta edit" id="c-meta-wrap"><div class="clab" data-i18n="lbl_target">META</div><div class="cval" id="c-meta">∞</div></div>
+    </div>
+    <div class="btnstack">
+      <span id="ring"></span>
+      <button id="bigbtn" disabled><span class="ico" id="big-ico"></span><span class="lbl" id="big-lbl">…</span></button>
+    </div>
+  </main>
+
+  <footer id="bottom">
+    <button class="navbtn menu" id="btn-menu"><span class="ico" id="ic-menu"></span><span data-i18n="nav_menu">MENÚ</span></button>
+    <button class="navbtn home" id="btn-home"><span class="ico" id="ic-home"></span><span data-i18n="nav_home">HOME</span></button>
+    <button class="navbtn sizes" id="btn-sizes"><span class="ico" id="ic-sizes"></span><span data-i18n="nav_sizes">TALLAS</span></button>
+    <button class="navbtn disable" id="btn-disable"><span class="ico" id="ic-disable"></span><span data-i18n="nav_off">APAGAR</span></button>
+    <button class="navbtn stats" id="btn-stats"><span class="ico" id="ic-stats"></span><span data-i18n="nav_stats">STATS</span></button>
+  </footer>
+</div>
+
+<!-- PANTALLA DE TALLAS (feature 004): aparte de la del modo automatico -->
+<div id="sizes" class="hidden">
+  <header id="sz-top">
+    <button id="sz-back"><span data-i18n="tal_back">VOLVER</span></button>
+    <div id="sz-title">TALLAS<small>SERIGRAFÍA</small></div>
+    <div style="min-width:22vmin"></div>
+  </header>
+  <div id="sz-statuswrap"><div id="sz-status"><span class="sdot"></span><span id="sz-statustext">—</span></div></div>
+  <main id="sz-body">
+    <button id="sz-home" disabled><span data-i18n="tal_home">HOME SCREEN</span></button>
+    <div id="sz-grid"></div>
+    <div id="sz-current"><span data-i18n="tal_current">TALLA ACTUAL</span><b id="sz-cur">—</b></div>
+  </main>
+</div>
+
+<div id="modal" class="hidden"><div class="card" id="modalcard"></div></div>
+<div id="overlay"><div class="spinner"></div><div id="ovtext">Conectando…</div><div id="ovsub"></div></div>
+
+<script>
+(function(){
+  "use strict";
+  var ICON = {
+    start:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M7 4.6 19 12 7 19.4Z"/></svg>',
+    stop: '<svg viewBox="0 0 24 24" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="2.4"/></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.2 12 4l9 7.2"/><path d="M5 10v9.2h5.2V14h3.6v5.2H19V10"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    power:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>',
+    stats:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    sizes:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="1.6"/><path d="M7 7v3.4M11 7v3.4M15 7v3.4M19 7v3.4"/></svg>'
+  };
+  var WS_URL=(location.protocol==="https:"?"wss://":"ws://")+location.host+"/websocket";
+  // OJO: NO suscribir "manual_stepper screen": esta version de Klipper no publica
+  // ese objeto en el status (comprobado), y pedirlo hace fallar la suscripcion.
+  var OBJS={ "toolhead":["homed_axes"], "gcode_macro _CYCLE_STATE":null, "save_variables":null, "gcode_macro _SCREEN":null };
+
+  // ----- i18n (ES/EN) -----
+  var lang=(function(){ try{ var s=localStorage.getItem("ui_lang"); return (s==="en"||s==="es")?s:"es"; }catch(e){ return "es"; } })();
+  var I18N={
+    es:{
+      doc_title:"Serigrafía — Operador", title_main:"AUTOMÁTICO", title_sub:"SERIGRAFÍA",
+      lbl_cycles:"CICLOS", lbl_target:"META",
+      nav_menu:"MENÚ", nav_home:"HOME", nav_off:"APAGAR", nav_stats:"STATS",
+      conn_offline:"Sin conexión", conn_klipper:"Klipper: ", conn_notready:"Klipper no listo", conn_online:"En línea",
+      ov_reconnecting:"Reconectando…", ov_searching:"Buscando la máquina en la red",
+      ov_kstopped:"Klipper detenido", ov_knotready:"Klipper no está listo", ov_restarting:"Puede estar reiniciando — espera unos segundos",
+      stt_ready:"Listo para imprimir", stt_waitconn:"Esperando conexión con la máquina",
+      stt_noref:"Sin referencia — pulsa HOME para empezar", stt_stopping:"Deteniendo al terminar el ciclo…",
+      stt_printing_cont:function(n){ return "Imprimiendo (continuo) — ciclo "+n; },
+      stt_printing:function(n,m){ return "Imprimiendo — ciclo "+n+" de "+m; },
+      kp_title:"Meta de ciclos", kp_hint:"0 = continuo (∞)", btn_cancel:"Cancelar", btn_ok:"Aceptar",
+      mn_title:"Ajustes", mn_lang:"Idioma / Language", mn_sub_cycle:"Ciclo de impresión", mn_sub_home:"Homing del stroke",
+      mn_side:"Lado de inicio", mn_side_hint:"de qué extremo parte el ciclo", side_left:"IZQUIERDA", side_right:"DERECHA",
+      p_pos_left:"Stroke — extremo izquierdo", p_pos_right:"Stroke — extremo derecho",
+      p_sq_up:"Squeegee arriba (seguro)", p_sq_down:"Squeegee abajo (malla)",
+      p_stroke_speed:"Velocidad de stroke", p_sq_speed:"Velocidad de squeegee",
+      hs_lab:"Velocidad de HOME (stroke)", hs_unit:"mm/s — al aplicar reinicia Klipper",
+      hs_note:"Ajusta y pulsa Aplicar (Klipper se reinicia ~10 s y hay que volver a hacer HOME).",
+      hs_apply:"Aplicar", hs_confirm:"¿Reiniciar y aplicar?", hs_noread:"No pude leer la velocidad actual.",
+      btn_close:"Cerrar", btn_save_cycle:"Guardar ciclo",
+      hs_reading:"Leyendo configuración…", hs_backing:"Respaldando printer.cfg…",
+      hs_saving:function(v){ return "Guardando "+v+" mm/s…"; },
+      hs_restarting:"Reiniciando Klipper… vuelve a hacer HOME al terminar.", hs_nofield:"no encontré homing_speed en [stepper_y]",
+      st_title:"Estado y estadísticas", st_state:"Estado", st_running:"En marcha", st_ready:"Listo", st_noref:"Sin referencia",
+      st_cycles:"Ciclos hechos", st_target:"Meta seleccionada", st_continuous:"Continuo (∞)",
+      st_axes:"Ejes referenciados", st_axes_yes:"Sí (X e Y)", st_axes_partial:function(a){ return "Parcial ("+a+")"; }, st_axes_no:"No",
+      st_side:"Lado de inicio", side_left_cap:"Izquierda", side_right_cap:"Derecha",
+      st_vstroke:"Vel. stroke", st_vsq:"Vel. squeegee", st_conn:"Conexión", st_online:"En línea",
+      nav_sizes:"TALLAS", tal_title:"TALLAS", tal_back:"VOLVER", tal_home:"HOME SCREEN",
+      tal_current:"TALLA ACTUAL", tal_waitconn:"Esperando conexión con la máquina",
+      tal_nohome:"Falta hacer HOME del screen para poder elegir talla",
+      tal_ready_nomachine:"Screen en cero — elige la talla (el squeegee no sube solo)",
+      tal_ready:"Screen en cero — elige la talla",
+      tal_running:"Ciclo en marcha — pulsa STOP para cambiar de talla"
+    },
+    en:{
+      doc_title:"Screen Printing — Operator", title_main:"AUTOMATIC", title_sub:"SCREEN PRINTING",
+      lbl_cycles:"CYCLES", lbl_target:"TARGET",
+      nav_menu:"MENU", nav_home:"HOME", nav_off:"POWER OFF", nav_stats:"STATS",
+      conn_offline:"Offline", conn_klipper:"Klipper: ", conn_notready:"Klipper not ready", conn_online:"Online",
+      ov_reconnecting:"Reconnecting…", ov_searching:"Looking for the machine on the network",
+      ov_kstopped:"Klipper stopped", ov_knotready:"Klipper is not ready", ov_restarting:"It may be restarting — wait a few seconds",
+      stt_ready:"Ready to print", stt_waitconn:"Waiting for connection to the machine",
+      stt_noref:"Not referenced — press HOME to start", stt_stopping:"Stopping after this cycle…",
+      stt_printing_cont:function(n){ return "Printing (continuous) — cycle "+n; },
+      stt_printing:function(n,m){ return "Printing — cycle "+n+" of "+m; },
+      kp_title:"Cycle target", kp_hint:"0 = continuous (∞)", btn_cancel:"Cancel", btn_ok:"OK",
+      mn_title:"Settings", mn_lang:"Idioma / Language", mn_sub_cycle:"Print cycle", mn_sub_home:"Stroke homing",
+      mn_side:"Start side", mn_side_hint:"which end the cycle starts from", side_left:"LEFT", side_right:"RIGHT",
+      p_pos_left:"Stroke — left end", p_pos_right:"Stroke — right end",
+      p_sq_up:"Squeegee up (safe)", p_sq_down:"Squeegee down (mesh)",
+      p_stroke_speed:"Stroke speed", p_sq_speed:"Squeegee speed",
+      hs_lab:"HOME speed (stroke)", hs_unit:"mm/s — applying restarts Klipper",
+      hs_note:"Adjust and press Apply (Klipper restarts ~10 s and you must HOME again).",
+      hs_apply:"Apply", hs_confirm:"Restart and apply?", hs_noread:"Couldn't read the current speed.",
+      btn_close:"Close", btn_save_cycle:"Save cycle",
+      hs_reading:"Reading configuration…", hs_backing:"Backing up printer.cfg…",
+      hs_saving:function(v){ return "Saving "+v+" mm/s…"; },
+      hs_restarting:"Restarting Klipper… HOME again when it's done.", hs_nofield:"couldn't find homing_speed in [stepper_y]",
+      st_title:"Status & statistics", st_state:"Status", st_running:"Running", st_ready:"Ready", st_noref:"Not referenced",
+      st_cycles:"Cycles done", st_target:"Selected target", st_continuous:"Continuous (∞)",
+      st_axes:"Referenced axes", st_axes_yes:"Yes (X & Y)", st_axes_partial:function(a){ return "Partial ("+a+")"; }, st_axes_no:"No",
+      st_side:"Start side", side_left_cap:"Left", side_right_cap:"Right",
+      st_vstroke:"Stroke speed", st_vsq:"Squeegee speed", st_conn:"Connection", st_online:"Online",
+      nav_sizes:"SIZES", tal_title:"SIZES", tal_back:"BACK", tal_home:"HOME SCREEN",
+      tal_current:"CURRENT SIZE", tal_waitconn:"Waiting for connection to the machine",
+      tal_nohome:"The screen must be HOMED before choosing a size",
+      tal_ready_nomachine:"Screen at zero — choose the size (squeegee won't lift on its own)",
+      tal_ready:"Screen at zero — choose the size",
+      tal_running:"Cycle running — press STOP to change size"
+    }
+  };
+  function t(k){ var d=I18N[lang]||I18N.es; var v=(d[k]!==undefined)?d[k]:I18N.es[k]; return (v===undefined)?k:v; }
+
+  var ws=null, rid=1, rcTimer=null, busy=false, busyTimer=null;
+  var conn={ connected:false, klippy:false, klippyState:"" };
+  var st={ homed:"", running:0, count:0, target:0, stopReq:0, vars:{},
+           screenHomed:0, screenTalla:0, screenNames:[] };
+  var uiTarget=0;
+
+  var $=function(id){ return document.getElementById(id); };
+  var bigbtn=$("bigbtn"), bigIco=$("big-ico"), bigLbl=$("big-lbl"), content=$("content");
+  var statusEl=$("status"), statusText=$("statustext");
+  var connEl=$("conn"), connText=$("conntext");
+  var cCount=$("c-count"), cMeta=$("c-meta"), cMetaWrap=$("c-meta-wrap");
+  var overlay=$("overlay"), ovText=$("ovtext"), ovSub=$("ovsub");
+  var modal=$("modal"), modalCard=$("modalcard");
+
+  var szView=$("sizes"), szStatus=$("sz-status"), szStatusText=$("sz-statustext");
+  var szGrid=$("sz-grid"), szHomeBtn=$("sz-home"), szCur=$("sz-cur"), szBuilt="";
+
+  $("ic-menu").innerHTML=ICON.menu; $("ic-home").innerHTML=ICON.home; $("ic-disable").innerHTML=ICON.power; $("ic-stats").innerHTML=ICON.stats;
+  $("ic-sizes").innerHTML=ICON.sizes;
+
+  function rpc(method,params){ if(ws&&ws.readyState===1) ws.send(JSON.stringify({jsonrpc:"2.0",method:method,params:params||{},id:rid++})); }
+  function run(script){ rpc("printer.gcode.script",{script:script}); }
+  function isHomed(){ return st.homed.indexOf("x")>=0 && st.homed.indexOf("y")>=0; }
+  function isRunning(){ return Number(st.running)===1; }
+  function num(v,d){ v=Number(v); return isNaN(v)?d:v; }
+  function pad(n){ return (n<10?"0":"")+n; }
+  function tsStamp(){ var d=new Date(); return ""+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds()); }
+
+  function tick(){ var d=new Date(); $("clock").textContent=pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()); }
+  setInterval(tick,1000); tick();
+
+  function render(){
+    var ready=conn.connected&&conn.klippy;
+    if(!conn.connected){ connText.textContent=t("conn_offline"); connEl.className="pill bad"; }
+    else if(!conn.klippy){ connText.textContent=conn.klippyState?t("conn_klipper")+conn.klippyState:t("conn_notready"); connEl.className="pill bad"; }
+    else { connText.textContent=t("conn_online"); connEl.className="pill ok"; }
+
+    if(!conn.connected){ overlay.className=""; ovText.textContent=t("ov_reconnecting"); ovSub.textContent=t("ov_searching"); }
+    else if(!conn.klippy){ overlay.className="err"; ovText.textContent=(conn.klippyState==="shutdown")?t("ov_kstopped"):t("ov_knotready"); ovSub.textContent=t("ov_restarting"); }
+    else overlay.className="hidden";
+
+    cCount.textContent=String(st.count);
+    var metaShown=isRunning()?st.target:uiTarget;
+    cMeta.textContent=(num(metaShown,0)===0)?"∞":String(metaShown);
+
+    var scls="idle", stxt=t("stt_ready");
+    if(!ready){ scls="warn"; stxt=t("stt_waitconn"); }
+    else if(!isHomed()){ scls="warn"; stxt=t("stt_noref"); }
+    else if(isRunning()){ scls="run";
+      if(Number(st.stopReq)===1) stxt=t("stt_stopping");
+      else if(num(st.target,0)===0) stxt=t("stt_printing_cont")(st.count+1);
+      else stxt=t("stt_printing")(Math.min(st.count+1,st.target),st.target);
+    } else stxt=t("stt_ready");
+    statusEl.className=scls; statusText.textContent=stxt;
+
+    content.classList.remove("running");
+    var canBig=ready&&!busy;
+    if(isRunning()){ bigbtn.className="b-stop"; bigIco.innerHTML=ICON.stop; bigLbl.textContent="STOP"; bigbtn.disabled=!canBig; content.classList.add("running"); }
+    else if(isHomed()){ bigbtn.className="b-start"; bigIco.innerHTML=ICON.start; bigLbl.textContent="START"; bigbtn.disabled=!canBig; }
+    else { bigbtn.className=""; bigIco.innerHTML=ICON.start; bigLbl.textContent="START"; bigbtn.disabled=true; }
+
+    setNav("btn-home", ready&&!isRunning());
+    setNav("btn-disable", ready&&!isRunning());
+    setNav("btn-menu", ready);
+    setNav("btn-stats", ready);
+    setNav("btn-sizes", ready&&!isRunning());
+    setNav("c-meta-wrap", ready&&!isRunning(), true);
+    renderSizes();
+  }
+
+  // ----- pantalla de TALLAS (feature 004) -----
+  // Los 7 botones se generan desde los nombres que publica _SCREEN, para que
+  // la lista de tallas tenga UNA sola fuente de verdad (la macro de Klipper).
+  function buildSizeGrid(){
+    var key=st.screenNames.join("|");
+    if(key===szBuilt) return;
+    szBuilt=key; szGrid.innerHTML="";
+    for(var i=0;i<st.screenNames.length;i++){
+      var b=document.createElement("button");
+      b.className="szbtn"; b.textContent=st.screenNames[i];
+      b.setAttribute("data-n",String(i+1)); b.disabled=true;
+      b.onclick=function(){
+        if(this.disabled) return;
+        run("SELECCIONAR_TALLA TALLA="+Number(this.getAttribute("data-n")));
+        flashBusy();
+      };
+      szGrid.appendChild(b);
+    }
+  }
+  function renderSizes(){
+    if(!szView||szView.classList.contains("hidden")) return;
+    var ready=conn.connected&&conn.klippy;
+    var homed=Number(st.screenHomed)===1;
+    var running=isRunning();
+    var can=ready&&!running&&!busy;          // se puede accionar algo
+    // El indexado de tallas es INDEPENDIENTE de la cabeza: el UNICO requisito es
+    // el home del screen. El home de la maquina NO se exige. Si esta hecho, la
+    // macro sube el squeegee como cortesia; si no, avisa y mueve igual.
+    var machineHomed=isHomed();
+    var cls="warn", txt=t("tal_nohome");
+    if(!ready){ txt=t("tal_waitconn"); }
+    else if(running){ txt=t("tal_running"); }
+    else if(!homed){ txt=t("tal_nohome"); }
+    else { cls="ok"; txt = machineHomed ? t("tal_ready") : t("tal_ready_nomachine"); }
+    szStatus.className=cls; szStatusText.textContent=txt;
+    szHomeBtn.disabled=!can;
+    // sin home DEL SCREEN los botones van deshabilitados DE VERDAD (no solo el estilo)
+    var btns=szGrid.querySelectorAll(".szbtn"), n=Number(st.screenTalla)||0;
+    for(var i=0;i<btns.length;i++){
+      btns[i].disabled=!(can&&homed);
+      if(i+1===n&&homed) btns[i].classList.add("on"); else btns[i].classList.remove("on");
+    }
+    szCur.textContent=(homed&&n&&st.screenNames[n-1])?st.screenNames[n-1]:"—";
+  }
+  function openSizes(){ szView.classList.remove("hidden"); renderSizes(); }
+  function closeSizes(){ szView.classList.add("hidden"); }
+  function setNav(id,enabled,isCounter){ var el=$(id); if(!el) return;
+    if(enabled) el.classList.remove("dis"); else el.classList.add("dis");
+    el.style.pointerEvents=enabled?"":"none"; if(isCounter) el.style.opacity=enabled?"":".5"; }
+  function flashBusy(){ busy=true; render(); if(busyTimer) clearTimeout(busyTimer); busyTimer=setTimeout(function(){ busy=false; render(); },600); }
+
+  bigbtn.onclick=function(){ if(bigbtn.disabled) return; if(isRunning()) run("STOP"); else run("START CYCLES="+num(uiTarget,0)); flashBusy(); };
+  $("btn-home").onclick=function(){ if(!$("btn-home").classList.contains("dis")){ run("HOME_OP"); flashBusy(); } };
+  $("btn-disable").onclick=function(){ if(!$("btn-disable").classList.contains("dis")){ run("M84"); flashBusy(); } };
+  $("btn-menu").onclick=function(){ if(!$("btn-menu").classList.contains("dis")) openMenu(); };
+  $("btn-stats").onclick=function(){ if(!$("btn-stats").classList.contains("dis")) openStats(); };
+  $("btn-sizes").onclick=function(){ if(!$("btn-sizes").classList.contains("dis")) openSizes(); };
+  $("sz-back").onclick=closeSizes;
+  szHomeBtn.onclick=function(){ if(szHomeBtn.disabled) return; run("SCREEN_HOME"); flashBusy(); };
+  cMetaWrap.onclick=function(){ if(cMetaWrap.classList.contains("dis")||isRunning()) return; openKeypad(); };
+
+  function showModal(html){ modalCard.innerHTML=html; modal.classList.remove("hidden"); }
+  function closeModal(){ modal.classList.add("hidden"); modalCard.innerHTML=""; }
+  modal.onclick=function(e){ if(e.target===modal) closeModal(); };
+
+  function applyStaticI18n(){
+    document.documentElement.lang=lang;
+    document.title=t("doc_title");
+    $("title").innerHTML=t("title_main")+"<small>"+t("title_sub")+"</small>";
+    $("sz-title").innerHTML=t("tal_title")+"<small>"+t("title_sub")+"</small>";
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){ els[i].textContent=t(els[i].getAttribute("data-i18n")); }
+  }
+  function setLang(l){ if(l!=="es"&&l!=="en"||l===lang) return; lang=l;
+    try{ localStorage.setItem("ui_lang",l); }catch(e){}
+    applyStaticI18n(); render();
+    if(!modal.classList.contains("hidden")) openMenu(); }
+
+  // ----- teclado META -----
+  function openKeypad(){
+    var buf=(num(uiTarget,0)===0)?"":String(uiTarget);
+    var rows=""; var keys=["1","2","3","4","5","6","7","8","9"];
+    for(var i=0;i<keys.length;i++) rows+='<button class="kp stepper" data-k="'+keys[i]+'" style="padding:3vmin 0;font-size:5.4vmin;">'+keys[i]+'</button>';
+    showModal('<h2>'+t("kp_title")+' <span></span></h2><div class="body">'+
+      '<div style="text-align:center;font-size:11vmin;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;padding:1vmin;margin-bottom:2vmin;background:var(--glass2);border:1px solid var(--stroke);border-radius:2vmin;box-shadow:var(--hi)"><span id="kpnum">∞</span><div style="font-size:2.6vmin;color:var(--muted);font-weight:600;letter-spacing:.08em">'+t("kp_hint")+'</div></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.8vmin">'+rows+
+        '<button class="kp" data-k="C" style="padding:3vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:rgba(224,151,43,.25);color:#8a6414;box-shadow:var(--hi)">C</button>'+
+        '<button class="kp" data-k="0" style="padding:3vmin 0;font-size:5.4vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">0</button>'+
+        '<button class="kp" data-k="B" style="padding:3vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">⌫</button>'+
+      '</div></div>'+
+      '<div class="foot"><button class="mbtn ghost" id="kp-cancel">'+t("btn_cancel")+'</button><button class="mbtn" id="kp-ok">'+t("btn_ok")+'</button></div>');
+    modalCard.querySelectorAll(".kp").forEach(function(b){ b.style.cursor="pointer"; });
+    function draw(){ $("kpnum").textContent=(buf===""||buf==="0")?"∞":buf; }
+    draw();
+    modalCard.querySelectorAll(".kp").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-k");
+      if(k==="C") buf=""; else if(k==="B") buf=buf.slice(0,-1); else if(buf.length<4) buf=(buf==="0"?"":buf)+k; draw(); }; });
+    $("kp-cancel").onclick=closeModal;
+    $("kp-ok").onclick=function(){ uiTarget=(buf===""?0:parseInt(buf,10)); run("SAVE_VARIABLE VARIABLE=ui_target VALUE="+uiTarget); closeModal(); render(); };
+  }
+
+  // ----- MENÚ (ajustes del ciclo + homing) -----
+  var PARAMS=[
+    {key:"pos_left",       labKey:"p_pos_left",     unit:"mm", step:1, def:0,   set:"POS_LEFT"},
+    {key:"pos_right",      labKey:"p_pos_right",    unit:"mm", step:1, def:100, set:"POS_RIGHT"},
+    {key:"squeegee_up",    labKey:"p_sq_up",        unit:"mm", step:1, def:10,  set:"SQUEEGEE_UP"},
+    {key:"squeegee_down",  labKey:"p_sq_down",      unit:"mm", step:1, def:90,  set:"SQUEEGEE_DOWN"},
+    {key:"stroke_speed",   labKey:"p_stroke_speed", unit:"mm/min", step:500, def:7000, set:"STROKE_SPEED"},
+    {key:"squeegee_speed", labKey:"p_sq_speed",     unit:"mm/min", step:500, def:7000, set:"SQUEEGEE_SPEED"}
+  ];
+  function stepperRow(key,lab,unit,val){
+    return '<div class="srow" data-key="'+key+'"><div class="k">'+lab+'<small>'+unit+'</small></div>'+
+      '<div class="stepper"><button data-d="-1">−</button><span class="sv">'+val+'</span><button data-d="1">+</button></div></div>';
+  }
+  function wireStepper(row,step,mn,mx){
+    var sv=row.querySelector(".sv");
+    row.querySelectorAll(".stepper button").forEach(function(b){
+      b.onclick=function(){ var cur=num(sv.textContent,mn)+step*parseInt(b.getAttribute("data-d"),10);
+        if(cur<mn) cur=mn; if(mx!==undefined&&cur>mx) cur=mx; sv.textContent=cur; }; });
+  }
+  function openMenu(){
+    var v=st.vars||{}; var side=num(v.start_side,0);
+    var langRow='<div class="srow"><div class="k">'+t("mn_lang")+'</div>'+
+      '<div class="toggle" id="langtog"><button data-l="es" class="'+(lang==="es"?"on":"")+'">ES</button><button data-l="en" class="'+(lang==="en"?"on":"")+'">EN</button></div></div>';
+    var rows='<div class="srow"><div class="k">'+t("mn_side")+'<small>'+t("mn_side_hint")+'</small></div>'+
+      '<div class="toggle" id="sidetog"><button data-s="0" class="'+(side===0?"on":"")+'">'+t("side_left")+'</button><button data-s="1" class="'+(side===1?"on":"")+'">'+t("side_right")+'</button></div></div>';
+    PARAMS.forEach(function(p){ rows+=stepperRow(p.key,t(p.labKey),p.unit,num(v[p.key],p.def)); });
+    showModal('<h2>'+t("mn_title")+' <span></span></h2><div class="body">'+
+      langRow+
+      '<div class="subhead">'+t("mn_sub_cycle")+'</div>'+rows+
+      '<div class="subhead">'+t("mn_sub_home")+'</div>'+
+      stepperRow("__home",t("hs_lab"),t("hs_unit"),"…")+
+      '<div class="srow"><div class="note" id="hs-status">'+t("hs_note")+'</div>'+
+        '<button class="mbtn warn sm" id="hs-apply">'+t("hs_apply")+'</button></div>'+
+      '</div>'+
+      '<div class="foot"><button class="mbtn ghost" id="mn-cancel">'+t("btn_close")+'</button><button class="mbtn" id="mn-save">'+t("btn_save_cycle")+'</button></div>');
+
+    modalCard.querySelectorAll("#langtog button").forEach(function(b){ b.onclick=function(){ setLang(b.getAttribute("data-l")); }; });
+
+    var chosenSide=side;
+    modalCard.querySelectorAll("#sidetog button").forEach(function(b){ b.onclick=function(){ chosenSide=parseInt(b.getAttribute("data-s"),10);
+      modalCard.querySelectorAll("#sidetog button").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); }; });
+    modalCard.querySelectorAll('.srow[data-key]').forEach(function(row){
+      var k=row.getAttribute("data-key");
+      if(k==="__home"){ wireStepper(row,5,5,200); }
+      else { var p=PARAMS.filter(function(x){return x.key===k;})[0]; wireStepper(row,p.step,0); }
+    });
+
+    $("mn-cancel").onclick=closeModal;
+    $("mn-save").onclick=function(){
+      var parts=["START_SIDE="+chosenSide];
+      modalCard.querySelectorAll('.srow[data-key]').forEach(function(row){ var k=row.getAttribute("data-key"); if(k==="__home") return;
+        var p=PARAMS.filter(function(x){return x.key===k;})[0]; parts.push(p.set+"="+num(row.querySelector(".sv").textContent,p.def)); });
+      run("SET_CYCLE "+parts.join(" ")); closeModal();
+    };
+
+    // valor actual de homing_speed desde printer.cfg
+    var hsRow=modalCard.querySelector('.srow[data-key="__home"]'); var hsSv=hsRow.querySelector(".sv");
+    fetchHomingSpeed(function(val){ hsSv.textContent=(val===null)?"?":val; });
+
+    var armed=false, armTimer=null; var applyBtn=$("hs-apply");
+    applyBtn.onclick=function(){
+      var v2=num(hsSv.textContent,50); if(hsSv.textContent==="?"){ $("hs-status").textContent=t("hs_noread"); return; }
+      if(!armed){ armed=true; applyBtn.textContent=t("hs_confirm");
+        armTimer=setTimeout(function(){ armed=false; applyBtn.textContent=t("hs_apply"); },4000); return; }
+      clearTimeout(armTimer); armed=false; applyBtn.textContent=t("hs_apply"); applyBtn.disabled=true;
+      applyHomeSpeed(v2, function(msg){ $("hs-status").textContent=msg; });
+    };
+  }
+
+  function openStats(){
+    var v=st.vars||{};
+    var homedTxt=isHomed()?t("st_axes_yes"):(st.homed?t("st_axes_partial")(st.homed):t("st_axes_no"));
+    var estado=isRunning()?t("st_running"):(isHomed()?t("st_ready"):t("st_noref"));
+    var meta=(num(uiTarget,0)===0)?t("st_continuous"):uiTarget;
+    showModal('<h2>'+t("st_title")+' <span></span></h2><div class="body">'+
+      '<div class="stat"><span>'+t("st_state")+'</span><span class="v">'+estado+'</span></div>'+
+      '<div class="stat"><span>'+t("st_cycles")+'</span><span class="v">'+st.count+'</span></div>'+
+      '<div class="stat"><span>'+t("st_target")+'</span><span class="v">'+meta+'</span></div>'+
+      '<div class="stat"><span>'+t("st_axes")+'</span><span class="v">'+homedTxt+'</span></div>'+
+      '<div class="stat"><span>'+t("st_side")+'</span><span class="v">'+(num(v.start_side,0)===0?t("side_left_cap"):t("side_right_cap"))+'</span></div>'+
+      '<div class="stat"><span>'+t("st_vstroke")+'</span><span class="v">'+num(v.stroke_speed,7000)+' mm/min</span></div>'+
+      '<div class="stat"><span>'+t("st_vsq")+'</span><span class="v">'+num(v.squeegee_speed,7000)+' mm/min</span></div>'+
+      '<div class="stat"><span>'+t("st_conn")+'</span><span class="v">'+(conn.klippy?t("st_online"):"—")+'</span></div>'+
+      '</div><div class="foot"><button class="mbtn" id="st-close">'+t("btn_close")+'</button></div>');
+    $("st-close").onclick=closeModal;
+  }
+
+  // ----- edición de homing_speed en printer.cfg vía Moonraker -----
+  function parseHomingSpeed(text){ var L=text.split(/\r?\n/), inY=false;
+    for(var i=0;i<L.length;i++){ var s=L[i].match(/^\s*\[([^\]]+)\]/); if(s){ inY=(s[1].trim()==="stepper_y"); continue; }
+      if(inY){ var m=L[i].match(/^\s*homing_speed\s*:\s*([\d.]+)/); if(m) return parseFloat(m[1]); } } return null; }
+  function replaceHomingSpeed(text,val){ var L=text.split(/\r?\n/), inY=false, done=false;
+    for(var i=0;i<L.length;i++){ var s=L[i].match(/^\s*\[([^\]]+)\]/); if(s){ inY=(s[1].trim()==="stepper_y"); continue; }
+      if(inY&&!done&&/^\s*homing_speed\s*:/.test(L[i])){ L[i]=L[i].replace(/(^\s*homing_speed\s*:\s*)[\d.]+/,"$1"+val); done=true; } }
+    return { text:L.join("\n"), done:done }; }
+  function fetchHomingSpeed(cb){ fetch("/server/files/config/printer.cfg",{cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){ cb(parseHomingSpeed(t)); }).catch(function(){ cb(null); }); }
+  function uploadConfig(name,text){ var fd=new FormData(); fd.append("root","config");
+    fd.append("file", new Blob([text],{type:"text/plain"}), name); return fetch("/server/files/upload",{method:"POST",body:fd}); }
+  function applyHomeSpeed(val,cb){
+    cb(t("hs_reading"));
+    fetch("/server/files/config/printer.cfg",{cache:"no-store"})
+      .then(function(r){ if(!r.ok) throw new Error("GET "+r.status); return r.text(); })
+      .then(function(txt){ var res=replaceHomingSpeed(txt,val); if(!res.done) throw new Error(t("hs_nofield"));
+        cb(t("hs_backing"));
+        return uploadConfig("printer.cfg.bak."+tsStamp(),txt).then(function(b){ if(!b.ok) throw new Error("backup "+b.status);
+          cb(t("hs_saving")(val)); return uploadConfig("printer.cfg",res.text); }); })
+      .then(function(u){ if(!u.ok) throw new Error("upload "+u.status);
+        cb(t("hs_restarting")); rpc("printer.firmware_restart"); setTimeout(closeModal,1400); })
+      .catch(function(e){ cb("Error: "+(e.message||e)); });
+  }
+
+  // ----- estado desde Moonraker -----
+  function applyStatus(s){ if(!s) return;
+    if(s.toolhead&&typeof s.toolhead.homed_axes==="string") st.homed=s.toolhead.homed_axes;
+    var cs=s["gcode_macro _CYCLE_STATE"]; if(cs){ if(cs.running!==undefined) st.running=cs.running; if(cs.count!==undefined) st.count=cs.count; if(cs.target!==undefined) st.target=cs.target; if(cs.stop_req!==undefined) st.stopReq=cs.stop_req; }
+    var sv=s.save_variables; if(sv&&sv.variables){ st.vars=sv.variables; if(st.vars.ui_target!==undefined&&!isRunning()) uiTarget=num(st.vars.ui_target,0); }
+    var sc=s["gcode_macro _SCREEN"];
+    if(sc){
+      if(sc.homed!==undefined) st.screenHomed=sc.homed;
+      if(sc.talla!==undefined) st.screenTalla=sc.talla;
+      if(sc.nombres&&sc.nombres.length){ st.screenNames=sc.nombres; buildSizeGrid(); }
+    }
+    render(); }
+  function subscribeAndQuery(){ rpc("printer.objects.query",{objects:OBJS}); rpc("printer.objects.subscribe",{objects:OBJS}); }
+
+  function connect(){
+    conn.connected=false; conn.klippy=false; render();
+    try{ ws=new WebSocket(WS_URL); }catch(e){ scheduleReconnect(); return; }
+    ws.onopen=function(){ conn.connected=true; rpc("printer.info"); render(); };
+    ws.onmessage=function(ev){ var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+      if(m.method==="notify_status_update"){ applyStatus(m.params&&m.params[0]); return; }
+      if(m.method==="notify_klippy_ready"){ conn.klippy=true; conn.klippyState="ready"; subscribeAndQuery(); render(); return; }
+      if(m.method==="notify_klippy_disconnected"){ conn.klippy=false; conn.klippyState="disconnected"; render(); return; }
+      if(m.method==="notify_klippy_shutdown"){ conn.klippy=false; conn.klippyState="shutdown"; render(); return; }
+      if(m.result!==undefined){ if(m.result.status){ conn.klippy=true; conn.klippyState="ready"; applyStatus(m.result.status); }
+        else if(m.result.state){ conn.klippy=(m.result.state==="ready"); conn.klippyState=m.result.state; if(conn.klippy) subscribeAndQuery(); render(); } } };
+    ws.onclose=function(){ conn.connected=false; conn.klippy=false; render(); scheduleReconnect(); };
+    ws.onerror=function(){ try{ ws.close(); }catch(e){} };
+  }
+  function scheduleReconnect(){ if(rcTimer) return; rcTimer=setTimeout(function(){ rcTimer=null; connect(); },2000); }
+
+  document.addEventListener("contextmenu",function(e){ e.preventDefault(); });
+  applyStaticI18n(); render(); connect();
+})();
+</script>
+</body>
+</html>

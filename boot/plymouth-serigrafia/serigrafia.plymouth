@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Serigrafia
+Description=Splash de arranque de la maquina de serigrafia (feature 008)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/serigrafia
+ScriptFile=/usr/share/plymouth/themes/serigrafia/serigrafia.script
