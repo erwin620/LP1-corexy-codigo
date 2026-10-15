@@ -162,6 +162,13 @@
   .mbtn.ghost{ background:var(--glass2); border:1px solid var(--stroke); color:var(--txt); }
   .mbtn.warn{ background:var(--amber); } .mbtn.sm{ font-size:3vmin; padding:1.6vmin 2.6vmin; }
 
+  /* Teclados numericos (META y AJUSTES): display + OK/Cancelar a la izquierda,
+     teclas a la derecha, para que quepan sin scroll en pantalla horizontal. */
+  .kpwrap{ display:flex; flex-wrap:wrap; gap:3vmin; align-items:stretch; }
+  .kpleft{ flex:1 1 34vmin; display:flex; flex-direction:column; justify-content:space-between; gap:2vmin; }
+  .kpleft .foot{ padding:0; flex-direction:column; justify-content:flex-end; }
+  .kpgrid{ flex:1.3 1 48vmin; display:grid; grid-template-columns:repeat(3,1fr); gap:1.6vmin; }
+
   .subhead{ font-size:2.6vmin; letter-spacing:.16em; color:var(--muted); font-weight:700; margin:2.4vmin 0 .4vmin; text-transform:uppercase; }
   .srow{ display:flex; align-items:center; justify-content:space-between; gap:2vmin; padding:1.8vmin 0; border-bottom:1px solid var(--hair); }
   .srow:last-child{ border-bottom:none; }
@@ -174,6 +181,7 @@
   .toggle{ display:flex; border:1px solid var(--stroke); border-radius:1.6vmin; overflow:hidden; box-shadow:var(--hi); }
   .toggle button{ padding:1.8vmin 2.6vmin; font-size:3vmin; font-weight:700; border:none; background:var(--glass2); color:var(--muted); cursor:pointer; }
   .toggle button.on{ background:var(--accent); color:#fff; }
+  .toggle.dis{ opacity:.4; pointer-events:none; }
   .note{ font-size:2.6vmin; color:var(--muted); padding:1vmin 0 0; }
   .stat{ display:flex; justify-content:space-between; padding:2vmin 0; border-bottom:1px solid var(--hair); font-size:3.4vmin; }
   .stat:last-child{ border-bottom:none; } .stat .v{ font-weight:800; }
@@ -194,7 +202,7 @@
      que cubra #app como #overlay/#modal - solo la tarjeta centrada. El
      bloqueo de los controles de atras lo hace estop-lock via pointer-events,
      no un backdrop visual. */
-  body.estop-lock #app, body.estop-lock #sizes, body.estop-lock #modal{ pointer-events:none; }
+  body.estop-lock #app, body.estop-lock #sizes, body.estop-lock #manual, body.estop-lock #menu, body.estop-lock #settings, body.estop-lock #modal{ pointer-events:none; }
   #estop{ position:fixed; left:50%; top:16%; transform:translateX(-50%); z-index:10000;
     width:min(100vmin,86vw); display:flex; flex-direction:column; align-items:center; gap:2.6vmin;
     padding:4.4vmin 5vmin; border-radius:3vmin; text-align:center; color:#fff;
@@ -236,17 +244,80 @@
     transition:transform .09s ease, filter .09s ease; }
   #sz-home:active:not(:disabled){ transform:scale(.975); filter:brightness(.96); }
   #sz-home:disabled{ cursor:default; color:var(--muted2); background:rgba(255,255,255,.40); text-shadow:none; }
-  #sz-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2.2vmin; width:min(98vmin,94vw); }
-  .szbtn{ padding:3.6vmin 1vmin; border-radius:2.4vmin; border:1px solid var(--stroke); cursor:pointer;
-    font-size:6vmin; font-weight:800; letter-spacing:.03em; color:#152233;
-    background:rgba(255,255,255,.46); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
-    box-shadow:var(--shadow),var(--hi); transition:transform .08s ease, filter .08s ease; }
-  .szbtn:active:not(:disabled){ transform:scale(.96); filter:brightness(1.05); }
-  .szbtn.on{ background:linear-gradient(135deg, rgba(10,132,255,.58), rgba(0,90,200,.58)); color:#fff;
-    text-shadow:0 .2vmin .8vmin rgba(0,0,0,.3); }
-  .szbtn:disabled{ opacity:.32; cursor:default; }
+  /* EL CUADRO DE IMPRESION (2026-10-08, pedido de Erwin): las tallas se dibujan
+     como el screen real -- un marco de aluminio con la malla dentro y las 7
+     tallas en fila. Cada talla es una zona tocable de la malla.
+     Colores: AMBAR PARPADEANDO = el screen va hacia esa talla; VERDE = ya llego.
+     XS a la izquierda (lado del tope del home): si fisicamente es al reves,
+     cambiar SZ_XS_A_LA_DERECHA en el script, no el CSS. */
+  #sz-frame{ width:min(150vmin,94vw); padding:2.6vmin; border-radius:2.2vmin;
+    background:linear-gradient(180deg,#d5dce5 0%,#aab5c2 48%,#c6ced8 100%);
+    box-shadow:var(--shadow), inset 0 .3vmin 0 rgba(255,255,255,.75), inset 0 -.4vmin 0 rgba(0,0,0,.18);
+    transition:filter .2s ease, opacity .2s ease; }
+  #sz-frame.off{ filter:grayscale(1); opacity:.5; }
+  #sz-grid{ display:flex; gap:1.4vmin; height:30vmin; padding:2.2vmin; border-radius:1vmin;
+    background-color:#efe3b4;
+    background-image:repeating-linear-gradient(0deg, rgba(120,95,30,.10) 0 1px, transparent 1px 5px),
+                     repeating-linear-gradient(90deg, rgba(120,95,30,.10) 0 1px, transparent 1px 5px);
+    box-shadow:inset 0 .4vmin 1.2vmin rgba(0,0,0,.28); }
+  #sz-grid.flip{ flex-direction:row-reverse; }
+  .szbtn{ flex:1 1 0; min-width:0; border-radius:1.2vmin; cursor:pointer;
+    border:.35vmin dashed rgba(21,34,51,.38);
+    font-size:4.8vmin; font-weight:800; letter-spacing:.02em; color:#152233;
+    background:rgba(255,255,255,.55); box-shadow:inset 0 0 0 .2vmin rgba(255,255,255,.5);
+    transition:transform .08s ease, background .15s ease, color .15s ease; }
+  .szbtn:active:not(:disabled){ transform:scale(.95); }
+  .szbtn.on{ border:.35vmin solid #0f7a4f; color:#fff; text-shadow:0 .2vmin .8vmin rgba(0,0,0,.35);
+    background:linear-gradient(160deg,#2fc488,#13895a);
+    box-shadow:0 0 2.4vmin rgba(23,160,106,.75), inset 0 .3vmin 0 rgba(255,255,255,.35); }
+  .szbtn.moving{ border:.35vmin solid #b0700f; color:#fff; text-shadow:0 .2vmin .8vmin rgba(0,0,0,.35);
+    background:linear-gradient(160deg,#f2b54a,#d0861a); animation:szblink .7s ease-in-out infinite; }
+  @keyframes szblink{ 0%,100%{ opacity:1; box-shadow:0 0 2.4vmin rgba(224,151,43,.85); } 50%{ opacity:.45; box-shadow:none; } }
+  .szbtn:disabled{ cursor:default; }
   #sz-current{ font-size:3vmin; font-weight:700; color:var(--muted); letter-spacing:.12em; display:flex; align-items:center; }
   #sz-current b{ color:var(--accent); font-size:5vmin; margin-left:1.8vmin; letter-spacing:.02em; }
+
+  /* ---------- PANTALLA MANUAL (feature 012) ---------- */
+  /* Calcada de #sizes (feature 004) letra por letra, con prefijo ma- para no
+     chocar con mn- (pantalla MENÚ) ni ag- (pantalla AJUSTES). */
+  /* PANTALLAS MENÚ (#menu) y AJUSTES (#settings): mismo esqueleto que #manual,
+     reusando estas reglas con los ids mn- y ag- en vez de duplicarlas. */
+  #manual, #menu, #settings{ position:fixed; inset:0; z-index:20; display:grid; grid-template-rows:auto auto 1fr;
+    background:linear-gradient(135deg,#f4f7fc,#e9eff8); }
+  #manual.hidden, #menu.hidden, #settings.hidden{ display:none; }
+  #ma-top, #mn-top, #ag-top{ display:flex; align-items:center; gap:2vmin; padding:1.8vmin 2.6vmin; border-bottom:1px solid var(--hair);
+    background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); }
+  #ma-title, #mn-title, #ag-title{ flex:1; text-align:center; font-size:4.2vmin; font-weight:800; letter-spacing:.2em; color:#152233; }
+  #ma-title small, #mn-title small, #ag-title small{ display:block; font-size:2vmin; font-weight:600; letter-spacing:.34em; color:var(--muted); margin-top:.3vmin; }
+  #ma-back, #mn-back, #ag-back{ padding:1.6vmin 3vmin; border-radius:100px; border:1px solid var(--stroke); min-width:22vmin;
+    background:var(--glass2); box-shadow:var(--hi); font-size:3vmin; font-weight:700; color:var(--txt); cursor:pointer; }
+  #ma-back:active, #mn-back:active, #ag-back:active{ transform:scale(.96); filter:brightness(.96); }
+  #ma-statuswrap{ padding:1.8vmin 2.6vmin 0; }
+  #ma-status{ display:flex; align-items:center; gap:2vmin; padding:2vmin 2.6vmin; border-radius:2.4vmin;
+    font-size:2.8vmin; font-weight:600; color:var(--txt);
+    background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
+  #ma-status .sdot{ width:2.6vmin; height:2.6vmin; border-radius:50%; background:var(--muted2); flex:0 0 auto; }
+  #ma-status.ok .sdot{ background:var(--ok); }
+  #ma-status.warn .sdot{ background:var(--warn); box-shadow:0 0 1.4vmin rgba(224,151,43,.7); }
+  #ma-body, #mn-body, #ag-body{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2vmin; padding:2vmin; min-height:0; overflow:auto; }
+  #ma-home{ width:min(74vmin,84vw); padding:2.2vmin; border:none; border-radius:3vmin; cursor:pointer; color:#fff;
+    font-size:4vmin; font-weight:800; letter-spacing:.06em; text-shadow:0 .3vmin 1vmin rgba(0,0,0,.32);
+    background:linear-gradient(135deg, rgba(240,175,60,.55), rgba(200,130,20,.55));
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); box-shadow:var(--shadow),var(--hi);
+    transition:transform .09s ease, filter .09s ease; }
+  #ma-home:active:not(:disabled){ transform:scale(.975); filter:brightness(.96); }
+  #ma-home:disabled{ cursor:default; color:var(--muted2); background:rgba(255,255,255,.40); text-shadow:none; }
+  #ma-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.8vmin; width:min(98vmin,94vw); }
+  #ma-grid .mafull{ grid-column:1 / -1; }
+  .mabtn{ padding:2.4vmin 1vmin; border-radius:2.2vmin; border:1px solid var(--stroke); cursor:pointer;
+    font-size:3.2vmin; font-weight:800; letter-spacing:.02em; color:#152233; text-align:center;
+    background:rgba(255,255,255,.46); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+    box-shadow:var(--shadow),var(--hi); transition:transform .08s ease, filter .08s ease; }
+  .mabtn:active:not(:disabled){ transform:scale(.97); filter:brightness(1.05); }
+  .mabtn:disabled{ opacity:.32; cursor:default; }
+  .mabtn .mreason{ display:block; font-size:1.9vmin; font-weight:600; color:var(--bad); letter-spacing:.02em; margin-top:.6vmin; min-height:2.4vmin; }
 </style>
 </head>
 <body class="cursor-hidden">
@@ -316,8 +387,80 @@
   <div id="sz-statuswrap"><div id="sz-status"><span class="sdot"></span><span id="sz-statustext">—</span></div></div>
   <main id="sz-body">
     <button id="sz-home" disabled><span data-i18n="tal_home">HOME SCREEN</span></button>
-    <div id="sz-grid"></div>
+    <div id="sz-frame" class="off"><div id="sz-grid"></div></div>
     <div id="sz-current"><span data-i18n="tal_current">TALLA ACTUAL</span><b id="sz-cur">—</b></div>
+  </main>
+</div>
+
+<!-- PANTALLA MANUAL (feature 012): los mismos movimientos del ciclo automatico,
+     disparados uno por uno. El orden de los botones ES el orden del ciclo. -->
+<div id="manual" class="hidden">
+  <header id="ma-top">
+    <button id="ma-back"><span data-i18n="man_back">VOLVER</span></button>
+    <div id="ma-title">MANUAL<small>SERIGRAFÍA</small></div>
+    <div style="min-width:22vmin"></div>
+  </header>
+  <div id="ma-statuswrap"><div id="ma-status"><span class="sdot"></span><span id="ma-statustext">—</span></div></div>
+  <main id="ma-body">
+    <button id="ma-home" disabled><span data-i18n="man_home">HOME</span></button>
+    <div id="ma-grid">
+      <!-- Orden pedido por Erwin (2026-09-18), agrupado por accion, no por paso
+           del ciclo: fila 1 marco (subir izq / bajar der), fila 2 stroke (ida
+           izq / vuelta der), fila 3 squeegee (subir izq / bajar der, mismo
+           patron que el marco). HOME e INDEX se quedan donde estaban. -->
+      <button class="mabtn" id="ma-marco-arriba" disabled><span data-i18n="man_marco_up">MARCO ▲</span><span class="mreason"></span></button>
+      <button class="mabtn" id="ma-marco-abajo" disabled><span data-i18n="man_marco_down">MARCO ▼</span><span class="mreason"></span></button>
+      <button class="mabtn" id="ma-stroke-out" disabled><span data-i18n="man_stroke_out">STROKE IDA (vacío)</span><span class="mreason"></span></button>
+      <button class="mabtn" id="ma-stroke-in" disabled><span data-i18n="man_stroke_in">STROKE VUELTA (IMPRIME)</span><span class="mreason"></span></button>
+      <button class="mabtn" id="ma-squeegee-up" disabled><span data-i18n="man_squeegee_up">SQUEEGEE ▲</span><span class="mreason"></span></button>
+      <button class="mabtn" id="ma-squeegee-down" disabled><span data-i18n="man_squeegee_down">SQUEEGEE ▼</span><span class="mreason"></span></button>
+      <button class="mabtn mafull" id="ma-index" disabled><span data-i18n="man_index">SIGUIENTE ESTACIÓN</span><span class="mreason"></span></button>
+    </div>
+  </main>
+</div>
+
+<!-- PANTALLA MENÚ: reemplaza el viejo modal de Ajustes. Solo dos entradas
+     (AJUSTES, MANUAL) más el idioma, que se mudó aquí desde ese modal. -->
+<div id="menu" class="hidden">
+  <header id="mn-top">
+    <button id="mn-back"><span data-i18n="men_back">VOLVER</span></button>
+    <div id="mn-title">MENÚ<small>SERIGRAFÍA</small></div>
+    <div style="min-width:22vmin"></div>
+  </header>
+  <main id="mn-body">
+    <div id="mn-grid" style="display:grid;grid-template-columns:1fr;gap:1.8vmin;width:min(98vmin,94vw)">
+      <button class="mabtn mafull" id="mn-open-settings" data-i18n="men_settings">AJUSTES</button>
+      <button class="mabtn mafull" id="mn-open-manual2" data-i18n="men_manual">MANUAL</button>
+    </div>
+    <div class="srow" id="mn-siderow" style="width:min(98vmin,94vw)">
+      <div class="k"><span data-i18n="mn_side">Espera del stroke</span><small data-i18n="mn_side_hint">Dónde espera la cabeza entre ciclos</small></div>
+      <div class="toggle" id="sidetog"><button data-s="IZQUIERDA" data-i18n="side_left">IZQUIERDA</button><button data-s="DERECHA" data-i18n="side_right">DERECHA</button></div>
+    </div>
+    <div class="srow" id="mn-langrow" style="width:min(98vmin,94vw)">
+      <div class="k" data-i18n="mn_lang">Idioma / Language</div>
+      <div class="toggle" id="langtog2"><button data-l="es">ES</button><button data-l="en">EN</button></div>
+    </div>
+  </main>
+</div>
+
+<!-- PANTALLA AJUSTES: velocidad (0-99) y posición (mm) de cabeza e index.
+     Reemplaza el bloque de ciclo del viejo modal de Ajustes. -->
+<div id="settings" class="hidden">
+  <header id="ag-top">
+    <button id="ag-back"><span data-i18n="ag_back">VOLVER</span></button>
+    <div id="ag-title">AJUSTES<small>SERIGRAFÍA</small></div>
+    <div style="min-width:22vmin"></div>
+  </header>
+  <main id="ag-body">
+    <div style="width:min(98vmin,94vw)">
+      <div class="subhead" data-i18n="ag_sub_speed">Velocidad</div>
+      <div id="ag-rows-speed"></div>
+      <div class="subhead" data-i18n="mn_sub_pos">Posición</div>
+      <div id="ag-rows-pos"></div>
+      <div class="foot" style="padding:2vmin 0 4vmin;justify-content:center">
+        <button class="mbtn" id="ag-save" data-i18n="btn_save_cycle">Guardar ciclo</button>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -331,7 +474,7 @@
 <div id="estop" class="hidden">
   <span class="eico" id="estop-ico"></span>
   <h2 data-i18n="es_title">PARO DE EMERGENCIA ACTIVADO</h2>
-  <p data-i18n="es_sub">Motores cortados por el botón físico. Suéltalo para continuar — habrá que homear de nuevo.</p>
+  <p id="estop-sub">Motores cortados por el botón físico. Suéltalo para continuar — habrá que homear de nuevo.</p>
   <button id="estop-reset" data-i18n="es_reset" disabled>RESET</button>
 </div>
 
@@ -377,7 +520,17 @@
   // Se anade "gcode_macro _INDEX" (feature 005). MISMO AVISO que para el screen:
   // NO suscribir "manual_stepper index" - esta version de Klipper no publica los
   // objetos manual_stepper y pedirlo hace fallar la suscripcion ENTERA.
-  var OBJS={ "toolhead":["homed_axes"], "gcode_macro _CYCLE_STATE":null, "save_variables":null, "gcode_macro _SCREEN":null, "gcode_macro _INDEX":null, "gcode_macro _ESTOP":null };
+  // Se anade "gcode_macro _MARCO" (feature 012): es un gcode_macro normal, NO
+  // un manual_stepper, asi que suscribirlo es seguro (mismo motivo por el que
+  // _INDEX y _SCREEN ya se suscriben, y el mismo por el que NO se suscribe
+  // "manual_stepper marco"). Y "gcode_move" para leer gcode_position.x, el
+  // sistema de coordenadas en el que estan escritos los G1 X del ciclo -- es
+  // el mismo dato que usan las guardas de las macros MANUAL_STROKE_*.
+  // "gcode_button paro_emergencia" se suscribe aparte de _ESTOP a proposito:
+  // Klipper escribe last_state en el callback del boton ANTES de renderizar el
+  // press_gcode y ANTES de pedir el mutex, asi que este objeto refleja el boton
+  // en <=250ms aunque el ciclo tenga el mutex tomado varios segundos.
+  var OBJS={ "toolhead":["homed_axes"], "gcode_macro _CYCLE_STATE":null, "save_variables":null, "gcode_macro _SCREEN":null, "gcode_macro _INDEX":null, "idle_timeout":["state"], "gcode_macro _ESTOP":null, "gcode_button paro_emergencia":null, "gcode_macro _MARCO":null, "gcode_move":["gcode_position"] };
 
   // ----- i18n (ES/EN) -----
   var lang=(function(){ try{ var s=localStorage.getItem("ui_lang"); return (s==="en"||s==="es")?s:"es"; }catch(e){ return "es"; } })();
@@ -397,26 +550,23 @@
       chip_modo_head:"SOLO CABEZA", chip_modo_carr:"CARRUSEL",
       chip_head_ok:"Cabeza referenciada", chip_head_no:"Cabeza sin HOME", chip_head_na:"Cabeza sin usar",
       chip_index_ok:function(n){ return "Plato: estación "+n; }, chip_index_no:"Plato sin HOME",
+      chip_index_moving:function(n){ return "Plato girando → estación "+n; },
       chip_sim:"SIMULACIÓN — NO IMPRIME",
       nav_liberar:"DESHABILITAR", nav_energizar:"ENERGIZAR",
       stt_plato_libre:"Plato LIBRE — gira a mano. Pulsa HOME cuando termines",
-      mn_mode:"Modo de trabajo", mn_mode_hint:"carrusel indexa el plato e imprime solo donde hay prenda",
-      mode_head:"SOLO CABEZA", mode_carr:"CARRUSEL",
       stt_printing_cont:function(n){ return "Imprimiendo (continuo) — ciclo "+n; },
       stt_printing:function(n,m){ return "Imprimiendo — ciclo "+n+" de "+m; },
       kp_title:"Meta de ciclos", kp_hint:"0 = continuo (∞)", btn_cancel:"Cancelar", btn_ok:"Aceptar",
-      mn_title:"Ajustes", mn_lang:"Idioma / Language", mn_sub_cycle:"Ciclo de impresión", mn_sub_home:"Homing del stroke",
-      mn_side:"Lado de inicio", mn_side_hint:"de qué extremo parte el ciclo", side_left:"IZQUIERDA", side_right:"DERECHA",
+      mn_side:"Espera del stroke", mn_side_hint:"Dónde espera la cabeza entre ciclos", side_left:"IZQUIERDA", side_right:"DERECHA",
+      mn_lang:"Idioma / Language", mn_sub_cycle:"Ciclo de impresión", mn_sub_pos:"Posición",
       p_pos_left:"Stroke — extremo izquierdo", p_pos_right:"Stroke — extremo derecho",
       p_sq_up:"Squeegee arriba (seguro)", p_sq_down:"Squeegee abajo (malla)",
+      p_sq_hint:"más alto = más arriba · tope 280",
+      ag_sq_err_title:"No se guardó", ag_sq_err:"Squeegee ARRIBA tiene que ser un número mayor que squeegee ABAJO (más alto = más arriba; el tope de arriba es 280).",
       p_stroke_speed:"Velocidad de stroke", p_sq_speed:"Velocidad de squeegee",
-      hs_lab:"Velocidad de HOME (stroke)", hs_unit:"mm/s — al aplicar reinicia Klipper",
-      hs_note:"Ajusta y pulsa Aplicar (Klipper se reinicia ~10 s y hay que volver a hacer HOME).",
-      hs_apply:"Aplicar", hs_confirm:"¿Reiniciar y aplicar?", hs_noread:"No pude leer la velocidad actual.",
       btn_close:"Cerrar", btn_save_cycle:"Guardar ciclo",
-      hs_reading:"Leyendo configuración…", hs_backing:"Respaldando printer.cfg…",
-      hs_saving:function(v){ return "Guardando "+v+" mm/s…"; },
-      hs_restarting:"Reiniciando Klipper… vuelve a hacer HOME al terminar.", hs_nofield:"no encontré homing_speed en [stepper_y]",
+      men_back:"VOLVER", men_title:"MENÚ", men_settings:"AJUSTES", men_manual:"MANUAL",
+      ag_back:"VOLVER", ag_title:"AJUSTES", ag_sub_speed:"Velocidad", ag_pct_unit:"% de protección",
       st_title:"Estado y estadísticas", st_state:"Estado", st_running:"En marcha", st_ready:"Listo", st_noref:"Sin referencia",
       st_cycles:"Ciclos hechos", st_target:"Meta seleccionada", st_continuous:"Continuo (∞)",
       st_axes:"Ejes referenciados", st_axes_yes:"Sí (X e Y)", st_axes_partial:function(a){ return "Parcial ("+a+")"; }, st_axes_no:"No",
@@ -428,9 +578,32 @@
       tal_ready_nomachine:"Screen en cero — elige la talla (el squeegee no sube solo)",
       tal_ready:"Screen en cero — elige la talla",
       tal_running:"Ciclo en marcha — pulsa STOP para cambiar de talla",
+      tal_homing:"BUSCANDO EL TOPE…", tal_moving:"Moviendo el screen a la talla",
       es_title:"PARO DE EMERGENCIA ACTIVADO",
       es_sub:"Motores cortados por el botón físico. Suéltalo para continuar — habrá que homear de nuevo.",
-      es_reset:"RESET"
+      es_sub_sd:"Motores detenidos. Gira el hongo para soltarlo y pulsa RESET: se reinicia el firmware y hay que volver a hacer HOME. El contador de piezas vuelve a 0.",
+      es_reset:"RESET",
+      // ----- MODO MANUAL (feature 012) -----
+      stt_manual_marco:"El marco quedó ABAJO (modo manual) — súbelo o pulsa HOME antes de arrancar",
+      stt_manual_squeegee:"El squeegee quedó ABAJO (modo manual) — súbelo o pulsa HOME antes de arrancar",
+      man_title:"MANUAL", man_back:"VOLVER", man_home:"HOME",
+      man_marco_down:"MARCO ▼", man_marco_up:"MARCO ▲",
+      man_stroke_out:"STROKE IDA (vacío)", man_stroke_in:"STROKE VUELTA (IMPRIME)",
+      man_squeegee_down:"SQUEEGEE ▼", man_squeegee_up:"SQUEEGEE ▲",
+      man_index:"SIGUIENTE ESTACIÓN",
+      man_waitconn:"Esperando conexión con la máquina",
+      man_running:"Ciclo automático en marcha — pulsa STOP para mover a mano",
+      man_nohome:"Falta HOME — pulsa HOME para poder mover a mano",
+      man_ready:function(marco,sq,est){ return "MARCO: "+marco+" · SQUEEGEE: "+sq+" · ESTACIÓN "+est; },
+      man_marco_st_arriba:"ARRIBA", man_marco_st_abajo:"ABAJO", man_marco_st_desc:"DESCONOCIDA",
+      man_sq_st_arriba:"ARRIBA", man_sq_st_abajo:"ABAJO",
+      man_r_marco_home:"el marco no tiene HOME",
+      man_r_marco_arriba:"baja primero el marco",
+      man_r_marco_desc:"posición del marco desconocida",
+      man_r_stroke:"squeegee abajo y marco no abajo",
+      man_r_index_modo:"modo SOLO CABEZA: el plato no se usa",
+      man_r_index_home:"el plato no tiene HOME",
+      man_r_index_marco:"sube el marco antes de indexar"
     },
     en:{
       doc_title:"Screen Printing — Operator", title_main:"AUTOMATIC", title_sub:"SCREEN PRINTING",
@@ -447,26 +620,23 @@
       chip_modo_head:"HEAD ONLY", chip_modo_carr:"CAROUSEL",
       chip_head_ok:"Head referenced", chip_head_no:"Head not referenced", chip_head_na:"Head not used",
       chip_index_ok:function(n){ return "Carousel: station "+n; }, chip_index_no:"Carousel not referenced",
+      chip_index_moving:function(n){ return "Carousel turning → station "+n; },
       chip_sim:"SIMULATION — NOT PRINTING",
       nav_liberar:"DISABLE", nav_energizar:"ENERGIZE",
       stt_plato_libre:"Platen RELEASED — turn it by hand. Press HOME when done",
-      mn_mode:"Working mode", mn_mode_hint:"carousel indexes the platen and prints only where a garment is present",
-      mode_head:"HEAD ONLY", mode_carr:"CAROUSEL",
       stt_printing_cont:function(n){ return "Printing (continuous) — cycle "+n; },
       stt_printing:function(n,m){ return "Printing — cycle "+n+" of "+m; },
       kp_title:"Cycle target", kp_hint:"0 = continuous (∞)", btn_cancel:"Cancel", btn_ok:"OK",
-      mn_title:"Settings", mn_lang:"Idioma / Language", mn_sub_cycle:"Print cycle", mn_sub_home:"Stroke homing",
-      mn_side:"Start side", mn_side_hint:"which end the cycle starts from", side_left:"LEFT", side_right:"RIGHT",
+      mn_side:"Stroke waiting side", mn_side_hint:"Where the head waits between cycles", side_left:"LEFT", side_right:"RIGHT",
+      mn_lang:"Idioma / Language", mn_sub_cycle:"Print cycle", mn_sub_pos:"Position",
       p_pos_left:"Stroke — left end", p_pos_right:"Stroke — right end",
       p_sq_up:"Squeegee up (safe)", p_sq_down:"Squeegee down (mesh)",
+      p_sq_hint:"higher = up · top 280",
+      ag_sq_err_title:"Not saved", ag_sq_err:"Squeegee UP must be a larger number than squeegee DOWN (higher = up; the top stop is 280).",
       p_stroke_speed:"Stroke speed", p_sq_speed:"Squeegee speed",
-      hs_lab:"HOME speed (stroke)", hs_unit:"mm/s — applying restarts Klipper",
-      hs_note:"Adjust and press Apply (Klipper restarts ~10 s and you must HOME again).",
-      hs_apply:"Apply", hs_confirm:"Restart and apply?", hs_noread:"Couldn't read the current speed.",
       btn_close:"Close", btn_save_cycle:"Save cycle",
-      hs_reading:"Reading configuration…", hs_backing:"Backing up printer.cfg…",
-      hs_saving:function(v){ return "Saving "+v+" mm/s…"; },
-      hs_restarting:"Restarting Klipper… HOME again when it's done.", hs_nofield:"couldn't find homing_speed in [stepper_y]",
+      men_back:"BACK", men_title:"MENU", men_settings:"SETTINGS", men_manual:"MANUAL",
+      ag_back:"BACK", ag_title:"SETTINGS", ag_sub_speed:"Speed", ag_pct_unit:"% of guard",
       st_title:"Status & statistics", st_state:"Status", st_running:"Running", st_ready:"Ready", st_noref:"Not referenced",
       st_cycles:"Cycles done", st_target:"Selected target", st_continuous:"Continuous (∞)",
       st_axes:"Referenced axes", st_axes_yes:"Yes (X & Y)", st_axes_partial:function(a){ return "Partial ("+a+")"; }, st_axes_no:"No",
@@ -478,9 +648,32 @@
       tal_ready_nomachine:"Screen at zero — choose the size (squeegee won't lift on its own)",
       tal_ready:"Screen at zero — choose the size",
       tal_running:"Cycle running — press STOP to change size",
+      tal_homing:"FINDING THE STOP…", tal_moving:"Moving the screen to size",
       es_title:"EMERGENCY STOP ACTIVE",
       es_sub:"Motors cut by the physical button. Release it to continue — homing will be required again.",
-      es_reset:"RESET"
+      es_sub_sd:"Motors stopped. Twist the mushroom button to release it and press RESET: the firmware restarts and HOME is required again. The part counter goes back to 0.",
+      es_reset:"RESET",
+      // ----- MANUAL MODE (feature 012) -----
+      stt_manual_marco:"The frame was left DOWN (manual mode) — raise it or press HOME before starting",
+      stt_manual_squeegee:"The squeegee was left DOWN (manual mode) — raise it or press HOME before starting",
+      man_title:"MANUAL", man_back:"BACK", man_home:"HOME",
+      man_marco_down:"FRAME ▼", man_marco_up:"FRAME ▲",
+      man_stroke_out:"STROKE OUT (empty)", man_stroke_in:"STROKE IN (PRINTS)",
+      man_squeegee_down:"SQUEEGEE ▼", man_squeegee_up:"SQUEEGEE ▲",
+      man_index:"NEXT STATION",
+      man_waitconn:"Waiting for connection to the machine",
+      man_running:"Automatic cycle running — press STOP to move by hand",
+      man_nohome:"Not referenced — press HOME to move by hand",
+      man_ready:function(marco,sq,est){ return "FRAME: "+marco+" · SQUEEGEE: "+sq+" · STATION "+est; },
+      man_marco_st_arriba:"UP", man_marco_st_abajo:"DOWN", man_marco_st_desc:"UNKNOWN",
+      man_sq_st_arriba:"UP", man_sq_st_abajo:"DOWN",
+      man_r_marco_home:"the frame is not homed",
+      man_r_marco_arriba:"lower the frame first",
+      man_r_marco_desc:"frame position unknown",
+      man_r_stroke:"squeegee down and frame not down",
+      man_r_index_modo:"HEAD ONLY mode: the platen is not used",
+      man_r_index_home:"the platen is not homed",
+      man_r_index_marco:"raise the frame before indexing"
     }
   };
   function t(k){ var d=I18N[lang]||I18N.es; var v=(d[k]!==undefined)?d[k]:I18N.es[k]; return (v===undefined)?k:v; }
@@ -489,8 +682,10 @@
   var conn={ connected:false, klippy:false, klippyState:"" };
   var st={ homed:"", running:0, count:0, target:0, stopReq:0, vars:{},
            screenHomed:0, screenTalla:0, screenNames:[],
-           indexHomed:0, indexStation:0, indexEnergizado:0,
-           estopActive:0, estopFisico:0 };
+           indexHomed:0, indexStation:0, indexEnergizado:0, indexMoving:0, busy:false,
+           estopActive:0, estopFisico:0, estopBoton:0, estopLatch:0,
+           // feature 012: 0 = DESCONOCIDA, 1 = ARRIBA, 2 = ABAJO (ver _MARCO.pos)
+           marcoHomed:0, marcoPos:0, squeegeeX:null };
   var uiTarget=0;
 
   var $=function(id){ return document.getElementById(id); };
@@ -500,16 +695,29 @@
   var cCount=$("c-count"), cMeta=$("c-meta"), cMetaWrap=$("c-meta-wrap");
   var overlay=$("overlay"), ovText=$("ovtext"), ovSub=$("ovsub");
   var modal=$("modal"), modalCard=$("modalcard");
-  var estopEl=$("estop"), estopResetBtn=$("estop-reset");
+  var estopEl=$("estop"), estopResetBtn=$("estop-reset"), estopSubEl=$("estop-sub");
 
   var szView=$("sizes"), szStatus=$("sz-status"), szStatusText=$("sz-statustext");
-  var szGrid=$("sz-grid"), szHomeBtn=$("sz-home"), szCur=$("sz-cur"), szBuilt="";
+  var szGrid=$("sz-grid"), szFrame=$("sz-frame"), szHomeBtn=$("sz-home"), szCur=$("sz-cur"), szBuilt="";
+  var szHomeLbl=szHomeBtn.querySelector("span");
+
+  var maView=$("manual"), maStatus=$("ma-status"), maStatusText=$("ma-statustext"), maHomeBtn=$("ma-home");
+  var mnView=$("menu"), agView=$("settings");
 
   $("ic-menu").innerHTML=ICON.menu; $("ic-home").innerHTML=ICON.home; $("ic-stats").innerHTML=ICON.stats;
   $("ic-sizes").innerHTML=ICON.sizes; $("estop-ico").innerHTML=ICON.estop;
 
-  function rpc(method,params){ if(ws&&ws.readyState===1) ws.send(JSON.stringify({jsonrpc:"2.0",method:method,params:params||{},id:rid++})); }
-  function run(script){ rpc("printer.gcode.script",{script:script}); }
+  // cb (opcional): se llama con true/false cuando Moonraker RESPONDE, que para
+  // printer.gcode.script es cuando el comando TERMINA (o falla). Si se cae el
+  // websocket se llama con false, para que nadie se quede esperando.
+  var rpcCbs={};
+  function rpc(method,params,cb){
+    if(ws&&ws.readyState===1){ var id=rid++; if(cb) rpcCbs[id]=cb;
+      ws.send(JSON.stringify({jsonrpc:"2.0",method:method,params:params||{},id:id})); }
+    else if(cb) cb(false);
+  }
+  function rpcCbsFail(){ var c=rpcCbs; rpcCbs={}; for(var k in c) c[k](false); }
+  function run(script,cb){ rpc("printer.gcode.script",{script:script},cb); }
   function isHomed(){ return st.homed.indexOf("x")>=0 && st.homed.indexOf("y")>=0; }
   function isRunning(){ return Number(st.running)===1; }
 
@@ -536,10 +744,33 @@
   // cabeza estaba homeada) y la macro lo rechazaba. Boton que miente.
   function needsHead(){ return !isSimular(); }
   function simInvalid(){ return isSimular() && !isCarrusel(); }
+
+  // ----- posicion del marco y del squeegee (feature 012) -----
+  // marcoPos: 0 = DESCONOCIDA, 1 = ARRIBA, 2 = ABAJO. Igual que en la macro:
+  // solo el 2 (certeza de abajo) bloquea START/INDEX. DESCONOCIDA deja pasar,
+  // o una maquina con MARCO=NO y el cuadro bajado a mano quedaria bloqueada
+  // tras cada reinicio (marcoPos vuelve a 0), sin forma de desbloquearla.
+  function marcoAbajo(){ return Number(st.marcoPos)===2; }
+  function marcoArriba(){ return Number(st.marcoPos)===1; }
+  // Cercania relativa, no igualdad con squeegee_up: replica EXACTAMENTE la
+  // guarda de la macro (ver macros_ciclo.cfg / macros_manual.cfg) para que
+  // el boton no mienta.
+  function squeegeeAbajo(){
+    if(st.squeegeeX===null) return false;
+    var su=num(st.vars.squeegee_up,10), sd=num(st.vars.squeegee_down,90);
+    if(su===sd) return false;
+    var x=st.squeegeeX;
+    return Math.abs(x-sd) < Math.abs(x-su);
+  }
+  // ESTA ES LA REGLA DE START, Y TIENE QUE SER LA MISMA QUE LA DE LA MACRO
+  // (feature 012, se suma a la regla ya escrita arriba): la maquina no puede
+  // arrancar el automatico si quedo en posicion de manual.
+  function manualBloqueaStart(){ return marcoAbajo() || (isHomed() && squeegeeAbajo()); }
   function canStart(){
     if(simInvalid()) return false;
     if(needsHead() && !isHomed()) return false;
     if(isCarrusel() && !isIndexHomed()) return false;
+    if(!isSimular() && manualBloqueaStart()) return false;
     return true;
   }
   // Devuelve que falta, para poder decirlo en concreto en vez de "sin referencia".
@@ -561,17 +792,26 @@
     quitarSplash(ready);
 
     // ----- PARO DE EMERGENCIA (feature 010) -----
-    // Bandera propia (_ESTOP.active), no el estado de shutdown de Klippy: el
-    // corte real de motores ya lo hizo el NC en hardware, esto solo es aviso.
+    // El boton fisico dispara action_emergency_stop() -> Klipper entra en
+    // `shutdown`. Ese estado ES la senal principal del paro; llega por
+    // notify_klippy_shutdown en milisegundos, sin pasar por el mutex del gcode.
+    // estopActive/estopLatch se conservan para el camino por gcode
+    // (PARO_EMERGENCIA lanzada a mano), que no provoca shutdown.
     // Bloquea el resto de la pantalla (pointer-events, no un backdrop visual)
     // para que nadie pulse HOME/START creyendo que la maquina sigue viva.
-    var estopOn=Number(st.estopActive)===1;
+    var estopSd=(conn.klippyState==="shutdown");
+    var estopOn=estopSd||Number(st.estopActive)===1||Number(st.estopLatch)===1;
     document.body.classList.toggle("estop-lock", estopOn);
     estopEl.classList.toggle("hidden", !estopOn);
-    // RESET solo se habilita cuando el boton fisico YA NO esta presionado -
-    // si sigue presionado, la macro tambien lo rechaza (RESET_ESTOP), pero
-    // que el boton se vea inerte evita el viaje redondo por gcode.
-    estopResetBtn.disabled = Number(st.estopFisico)===1;
+    // El texto cambia segun el camino: en shutdown hay que avisar que RESET
+    // reinicia el firmware y que primero hay que girar el hongo para soltarlo.
+    estopSubEl.textContent = estopSd ? t("es_sub_sd") : t("es_sub");
+    // En shutdown RESET siempre se habilita: si el hongo sigue presionado, el
+    // firmware vuelve a entrar en shutdown al arrancar y la tarjeta reaparece.
+    // Es autocorrectivo y mas honesto que adivinar el estado del boton, que
+    // durante el shutdown ya no se actualiza.
+    estopResetBtn.disabled = estopSd ? false
+      : (Number(st.estopBoton)===1 || Number(st.estopActive)!==1);
     // NO se corta el resto de render() aqui a proposito: el M84 de
     // PARO_EMERGENCIA ya invalido running/homed, asi que dejar que el resto
     // de la pantalla se actualice normalmente muestra el estado REAL de
@@ -581,7 +821,10 @@
     else { connText.textContent=t("conn_online"); connEl.className="pill ok"; }
 
     if(!conn.connected){ overlay.className=""; ovText.textContent=t("ov_reconnecting"); ovSub.textContent=t("ov_searching"); }
-    else if(!conn.klippy){ overlay.className="err"; ovText.textContent=(conn.klippyState==="shutdown")?t("ov_kstopped"):t("ov_knotready"); ovSub.textContent=t("ov_restarting"); }
+    // En shutdown NO se muestra el overlay generico: ese estado ya lo explica
+    // la tarjeta de paro de emergencia, y dos avisos superpuestos confunden.
+    else if(estopSd){ overlay.className="hidden"; }
+    else if(!conn.klippy){ overlay.className="err"; ovText.textContent=t("ov_knotready"); ovSub.textContent=t("ov_restarting"); }
     else overlay.className="hidden";
 
     cCount.textContent=String(st.count);
@@ -593,6 +836,8 @@
     if(!ready){ scls="warn"; stxt=t("stt_waitconn"); }
     else if(simInvalid()){ scls="warn"; stxt=t("stt_sim_invalida"); }
     else if(isCarrusel() && !isIndexEnergizado()){ scls="warn"; stxt=t("stt_plato_libre"); }
+    else if(!isSimular() && marcoAbajo()){ scls="warn"; stxt=t("stt_manual_marco"); }
+    else if(!isSimular() && isHomed() && squeegeeAbajo()){ scls="warn"; stxt=t("stt_manual_squeegee"); }
     else if(falta.length){ scls="warn";
       // Se dice CUAL de los dos homes falta. Antes decia solo "sin referencia",
       // y con dos ejes homeables eso deja al operador adivinando.
@@ -623,6 +868,7 @@
     renderLiberar(ready);
     setNav("c-meta-wrap", ready&&!isRunning(), true);
     renderSizes();
+    renderManual();
   }
 
   // ----- boton DESHABILITAR / ENERGIZAR (feature 007) -----
@@ -675,7 +921,13 @@
     // El plato solo se ensena si participa.
     if(carr){
       var ih=isIndexHomed();
-      chip("chip-index", ih?t("chip_index_ok")(st.indexStation):t("chip_index_no"), ih?"ok":"warn");
+      // Durante un avance _INDEX_AVANZAR baja homed a 0 a proposito; "girando"
+      // solo se muestra si ademas Klipper esta ejecutando (st.busy), para que un
+      // giro abortado no deje el chip colgado en "girando".
+      var girando=!ih&&Number(st.indexMoving)>0&&st.busy;
+      if(ih) chip("chip-index", t("chip_index_ok")(st.indexStation), "ok");
+      else if(girando) chip("chip-index", t("chip_index_moving")(st.indexMoving), "info");
+      else chip("chip-index", t("chip_index_no"), "warn");
     } else chipHide("chip-index");
 
     if(isSimular()) chip("chip-sim", t("chip_sim"), "sim"); else chipHide("chip-sim");
@@ -684,18 +936,31 @@
   // ----- pantalla de TALLAS (feature 004) -----
   // Los 7 botones se generan desde los nombres que publica _SCREEN, para que
   // la lista de tallas tenga UNA sola fuente de verdad (la macro de Klipper).
+  //
+  // Se dibujan como el CUADRO DE IMPRESION (2026-10-08). Estado de cada zona:
+  //   szPending = talla pedida que el screen TODAVIA esta recorriendo -> ambar
+  //               parpadeando. Se limpia cuando SELECCIONAR_TALLA TERMINA (la
+  //               respuesta de Moonraker llega al acabar la macro, tras su M400),
+  //               haya llegado bien o haya fallado.
+  //   st.screenTalla = talla en la que el screen YA esta -> verde.
+  // Mientras hay un movimiento o un home en curso no se acepta otro toque: el
+  // 2026-10-08 se vio que un segundo toque encola un segundo movimiento.
+  var SZ_XS_A_LA_DERECHA=false;   // true si el tope del home queda a la derecha del operador
+  var szPending=0, szHoming=false;
   function buildSizeGrid(){
     var key=st.screenNames.join("|");
     if(key===szBuilt) return;
     szBuilt=key; szGrid.innerHTML="";
+    if(SZ_XS_A_LA_DERECHA) szGrid.classList.add("flip"); else szGrid.classList.remove("flip");
     for(var i=0;i<st.screenNames.length;i++){
       var b=document.createElement("button");
       b.className="szbtn"; b.textContent=st.screenNames[i];
       b.setAttribute("data-n",String(i+1)); b.disabled=true;
       b.onclick=function(){
         if(this.disabled) return;
-        run("SELECCIONAR_TALLA TALLA="+Number(this.getAttribute("data-n")));
-        flashBusy();
+        szPending=Number(this.getAttribute("data-n"));
+        run("SELECCIONAR_TALLA TALLA="+szPending, function(){ szPending=0; render(); });
+        render();
       };
       szGrid.appendChild(b);
     }
@@ -713,20 +978,156 @@
     var cls="warn", txt=t("tal_nohome");
     if(!ready){ txt=t("tal_waitconn"); }
     else if(running){ txt=t("tal_running"); }
+    else if(szHoming){ txt=t("tal_homing"); }
     else if(!homed){ txt=t("tal_nohome"); }
+    else if(szPending){ txt=t("tal_moving")+" "+(st.screenNames[szPending-1]||""); }
     else { cls="ok"; txt = machineHomed ? t("tal_ready") : t("tal_ready_nomachine"); }
     szStatus.className=cls; szStatusText.textContent=txt;
-    szHomeBtn.disabled=!can;
+    var moving=szHoming||szPending>0;
+    szHomeBtn.disabled=!can||moving;
+    szHomeLbl.textContent=szHoming?t("tal_homing"):t("tal_home");
+    // Cuadro en GRIS si no se puede elegir talla por una razon que el operador
+    // tiene que resolver (sin conexion, sin home, ciclo en marcha). Durante un
+    // movimiento NO se pone gris: ahi se ve la talla parpadeando.
+    if(ready&&homed&&!running&&!szHoming) szFrame.classList.remove("off"); else szFrame.classList.add("off");
     // sin home DEL SCREEN los botones van deshabilitados DE VERDAD (no solo el estilo)
     var btns=szGrid.querySelectorAll(".szbtn"), n=Number(st.screenTalla)||0;
     for(var i=0;i<btns.length;i++){
-      btns[i].disabled=!(can&&homed);
-      if(i+1===n&&homed) btns[i].classList.add("on"); else btns[i].classList.remove("on");
+      btns[i].disabled=!(can&&homed)||moving;
+      var mov=(i+1===szPending), on=(!szPending&&i+1===n&&homed);
+      btns[i].classList.toggle("moving",mov);
+      btns[i].classList.toggle("on",on);
     }
     szCur.textContent=(homed&&n&&st.screenNames[n-1])?st.screenNames[n-1]:"—";
   }
   function openSizes(){ szView.classList.remove("hidden"); renderSizes(); }
   function closeSizes(){ szView.classList.add("hidden"); }
+
+  // ----- pantalla MANUAL (feature 012) -----
+  // Un <button disabled> NO dispara click, asi que "el motivo del bloqueo" NO
+  // puede depender de tocar el boton: se pinta SIEMPRE debajo, en .mreason.
+  function maReason(id,txt){ var el=document.querySelector("#"+id+" .mreason"); if(el) el.textContent=txt||""; }
+  function renderManual(){
+    if(!maView||maView.classList.contains("hidden")) return;
+    var ready=conn.connected&&conn.klippy;
+    var running=isRunning();
+    var homedXY=isHomed();
+    var can=ready&&!running&&!busy;
+
+    var cls="warn", txt=t("man_nohome");
+    if(!ready){ txt=t("man_waitconn"); }
+    else if(running){ txt=t("man_running"); }
+    else if(!homedXY){ txt=t("man_nohome"); }
+    else { cls="ok"; txt=t("man_ready")(marcoArriba()?t("man_marco_st_arriba"):(marcoAbajo()?t("man_marco_st_abajo"):t("man_marco_st_desc")), squeegeeAbajo()?t("man_sq_st_abajo"):t("man_sq_st_arriba"), (isCarrusel()&&isIndexHomed())?String(st.indexStation):"—"); }
+    maStatus.className=cls; maStatusText.textContent=txt;
+
+    maHomeBtn.disabled=!can;
+
+    var canMove=can&&homedXY;
+    // Igual que en HOME_OP: si el marco tiene home, MARCO_ABAJO/ARRIBA valen.
+    var marcoOk=marcoHomedOk();
+    setBtn("ma-marco-abajo", canMove&&marcoOk, canMove?(marcoOk?"":t("man_r_marco_home")):"");
+    setBtn("ma-marco-arriba", canMove&&marcoOk, canMove?(marcoOk?"":t("man_r_marco_home")):"");
+    // SQUEEGEE ABAJO: la MISMA condicion que la macro (MANUAL_SQUEEGEE_DOWN),
+    // que exige pos==ABAJO Y homed==1 (MARCO_HOME_ABAJO deja pos=2 con
+    // homed=0, y ahi tampoco hay que dejar bajar el squeegee).
+    var puedeBajarSq = canMove && marcoAbajo() && marcoHomedOk();
+    var rSq = "";
+    if(canMove && !(marcoAbajo()&&marcoHomedOk())) rSq = marcoArriba()?t("man_r_marco_arriba"):t("man_r_marco_desc");
+    setBtn("ma-squeegee-down", puedeBajarSq, rSq);
+    setBtn("ma-squeegee-up", canMove, "");
+    // STROKE: bloqueado si el squeegee esta abajo y el marco no esta abajo.
+    var strokeBloq = homedXY && squeegeeAbajo() && !marcoAbajo();
+    var rStroke = strokeBloq ? t("man_r_stroke") : "";
+    setBtn("ma-stroke-out", canMove && !strokeBloq, rStroke);
+    setBtn("ma-stroke-in", canMove && !strokeBloq, rStroke);
+    // INDEX: solo en modo CARRUSEL con home del plato, y con el marco NO abajo.
+    var puedeIndex = canMove && isCarrusel() && isIndexHomed() && !marcoAbajo();
+    var rIndex = "";
+    if(canMove){
+      if(!isCarrusel()) rIndex=t("man_r_index_modo");
+      else if(!isIndexHomed()) rIndex=t("man_r_index_home");
+      else if(marcoAbajo()) rIndex=t("man_r_index_marco");
+    }
+    setBtn("ma-index", puedeIndex, rIndex);
+  }
+  function setBtn(id,enabled,reason){ var b=$(id); if(!b) return; b.disabled=!enabled; maReason(id,reason); }
+  // Home valido para mover el marco a mano: igual criterio que _MARCO.homed.
+  function marcoHomedOk(){ return Number(st.marcoHomed)===1; }
+  function openManual(){ maView.classList.remove("hidden"); renderManual(); }
+  function closeManual(){ maView.classList.add("hidden"); }
+
+  // ----- pantalla MENÚ -----
+  // Reemplaza al viejo modal de Ajustes: aquí solo viven las dos entradas
+  // (AJUSTES, MANUAL) y el idioma, que se mudó desde ese modal.
+  function renderMenuScreen(){
+    mnView.querySelectorAll("#langtog2 button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-l")===lang);
+    });
+    // Espera del stroke = espera_derecha (0 IZQUIERDA: embarre con el giro /
+    // 1 DERECHA: espera en Y0 durante el giro, embarre después). NO es start_side
+    // (ese invierte el sentido del stroke). Bloqueado con el ciclo corriendo.
+    var side=num((st.vars||{}).espera_derecha,0);
+    var tog=$("sidetog");
+    tog.classList.toggle("dis", isRunning());
+    tog.querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", (b.getAttribute("data-s")==="DERECHA")===(side===1));
+    });
+  }
+  function openMenuScreen(){ mnView.classList.remove("hidden"); renderMenuScreen(); }
+  function closeMenuScreen(){ mnView.classList.add("hidden"); }
+
+  // ----- pantalla AJUSTES -----
+  // Velocidad en escala 0-99 (99 = velocidad máxima real de los motores,
+  // MMPERMIN_MAX) y posición igual que siempre, en mm. Conversión lineal.
+  // 7000 -> 14000 el 2026-09-25 (Erwin): 99 se quedaba corto (el stroke venía
+  // de 7500). 14000 -> 18000 el 2026-10-14 (feature 016, Erwin): mas rango
+  // util en 1-99. 18000 -> 21000 (feature 016, mismo dia, Erwin pidio mas).
+  // 21000 mm/min = 350 mm/s = max_velocity de Klipper (printer.cfg):
+  // es el techo; subirlo mas exige subir tambien max_velocity.
+  var MMPERMIN_MAX=21000, PCT_MAX=99;
+  function mmToPct(mm){ return Math.round(num(mm,MMPERMIN_MAX)/MMPERMIN_MAX*PCT_MAX); }
+  function pctToMm(pct){ return Math.round(num(pct,PCT_MAX)/PCT_MAX*MMPERMIN_MAX); }
+  var PARAMS_SPEED=[
+    {key:"stroke_speed",   labKey:"p_stroke_speed", def:7000, set:"STROKE_SPEED"},
+    {key:"squeegee_speed", labKey:"p_sq_speed",     def:7000, set:"SQUEEGEE_SPEED"}
+  ];
+  var PARAMS_POS=[
+    {key:"pos_left",       labKey:"p_pos_left",  unit:"mm", def:0,   set:"POS_LEFT",      min:0,    max:200},
+    {key:"pos_right",      labKey:"p_pos_right", unit:"mm", def:100, set:"POS_RIGHT",     min:0,    max:200},
+    {key:"squeegee_up",    labKey:"p_sq_up",     unitKey:"p_sq_hint", def:10,  set:"SQUEEGEE_UP",   min:-300, max:300},
+    {key:"squeegee_down",  labKey:"p_sq_down",   unitKey:"p_sq_hint", def:90,  set:"SQUEEGEE_DOWN", min:-300, max:300}
+  ];
+  function numRow(key,lab,unit,val){
+    return '<div class="srow" data-key="'+key+'"><div class="k">'+lab+(unit?'<small>'+unit+'</small>':'')+'</div>'+
+      '<button class="mbtn sm ag-val" data-key="'+key+'" style="min-width:20vmin;font-size:4vmin">'+val+'</button></div>';
+  }
+  function renderSettings(){
+    var v=st.vars||{};
+    var rowsSpeed="", rowsPos="";
+    PARAMS_SPEED.forEach(function(p){ rowsSpeed+=numRow(p.key, t(p.labKey), t("ag_pct_unit"), mmToPct(num(v[p.key],p.def))); });
+    PARAMS_POS.forEach(function(p){ rowsPos+=numRow(p.key, t(p.labKey), p.unitKey?t(p.unitKey):p.unit, num(v[p.key],p.def)); });
+    $("ag-rows-speed").innerHTML=rowsSpeed;
+    $("ag-rows-pos").innerHTML=rowsPos;
+
+    agView.querySelectorAll(".ag-val").forEach(function(btn){
+      btn.onclick=function(){
+        var key=btn.getAttribute("data-key");
+        var isSpeed=PARAMS_SPEED.some(function(p){ return p.key===key; });
+        var p=(isSpeed?PARAMS_SPEED:PARAMS_POS).filter(function(x){ return x.key===key; })[0];
+        var mn=isSpeed?0:p.min, mx=isSpeed?PCT_MAX:p.max;
+        openNumpad({
+          title: t(p.labKey),
+          value: num(btn.textContent,0),
+          min: mn, max: mx,
+          onAccept: function(v2){ btn.textContent=v2; }
+        });
+      };
+    });
+  }
+  function openSettings(){ agView.classList.remove("hidden"); renderSettings(); }
+  function closeSettings(){ agView.classList.add("hidden"); }
+
   function setNav(id,enabled,isCounter){ var el=$(id); if(!el) return;
     if(enabled) el.classList.remove("dis"); else el.classList.add("dis");
     el.style.pointerEvents=enabled?"":"none"; if(isCounter) el.style.opacity=enabled?"":".5"; }
@@ -742,14 +1143,80 @@
   // Si alguien lo repone, tiene que volver a anadir TAMBIEN el $("ic-disable") de
   // arriba y su setNav: una referencia a un elemento que no existe tira toda la
   // pantalla con un error de null, no solo ese boton.
-  $("btn-menu").onclick=function(){ if(!$("btn-menu").classList.contains("dis")) openMenu(); };
+  $("btn-menu").onclick=function(){ if(!$("btn-menu").classList.contains("dis")) openMenuScreen(); };
   $("btn-stats").onclick=function(){ if(!$("btn-stats").classList.contains("dis")) openStats(); };
   $("btn-sizes").onclick=function(){ if(!$("btn-sizes").classList.contains("dis")) openSizes(); };
   $("sz-back").onclick=closeSizes;
-  szHomeBtn.onclick=function(){ if(szHomeBtn.disabled) return; run("SCREEN_HOME"); flashBusy(); };
+  // szHoming hasta que SCREEN_HOME TERMINA: su pausa de 2 s antes de moverse
+  // hacia pensar que no habia respondido y se pulsaba dos veces (2026-10-08).
+  szHomeBtn.onclick=function(){ if(szHomeBtn.disabled) return; szHoming=true; render();
+    run("SCREEN_HOME", function(){ szHoming=false; render(); }); };
+
+  // ----- pantalla MANUAL (feature 012) -----
+  $("ma-back").onclick=closeManual;
+  maHomeBtn.onclick=function(){ if(maHomeBtn.disabled) return; run("HOME_OP"); flashBusy(); };
+  function wireMa(id,cmd){ var b=$(id); if(!b) return; b.onclick=function(){ if(b.disabled) return; run(cmd); flashBusy(); }; }
+  // Los botones llaman EXACTAMENTE a las macros del guion, mismo orden 1..7.
+  wireMa("ma-marco-abajo",    "MARCO_ABAJO");
+  wireMa("ma-stroke-out",     "MANUAL_STROKE_OUT");
+  wireMa("ma-squeegee-down",  "MANUAL_SQUEEGEE_DOWN");
+  wireMa("ma-stroke-in",      "MANUAL_STROKE_IN");
+  wireMa("ma-squeegee-up",    "MANUAL_SQUEEGEE_UP");
+  wireMa("ma-marco-arriba",   "MARCO_ARRIBA");
+  wireMa("ma-index",          "INDEX_NEXT");
+
+  // ----- pantalla MENÚ -----
+  $("mn-back").onclick=closeMenuScreen;
+  $("mn-open-settings").onclick=function(){ closeMenuScreen(); openSettings(); };
+  $("mn-open-manual2").onclick=function(){ closeMenuScreen(); openManual(); };
+  mnView.querySelectorAll("#sidetog button").forEach(function(b){
+    b.onclick=function(){
+      if(isRunning()) return;
+      var sd=b.getAttribute("data-s");
+      run("SET_CYCLE ESPERA="+sd);
+      st.vars=st.vars||{}; st.vars.espera_derecha=(sd==="DERECHA")?1:0;  // refleja ya; el save_variables real lo confirma
+      renderMenuScreen();
+    };
+  });
+  mnView.querySelectorAll("#langtog2 button").forEach(function(b){
+    b.onclick=function(){ setLang(b.getAttribute("data-l")); };
+  });
+
+  // ----- pantalla AJUSTES -----
+  $("ag-back").onclick=closeSettings;
+  $("ag-save").onclick=function(){
+    var parts=[];
+    PARAMS_SPEED.forEach(function(p){
+      var btn=agView.querySelector('.ag-val[data-key="'+p.key+'"]');
+      parts.push(p.set+"="+pctToMm(num(btn.textContent,PCT_MAX)));
+    });
+    var pos={};
+    PARAMS_POS.forEach(function(p){
+      var btn=agView.querySelector('.ag-val[data-key="'+p.key+'"]');
+      pos[p.key]=num(btn.textContent,p.def);
+      parts.push(p.set+"="+pos[p.key]);
+    });
+    // Misma regla que SET_CYCLE en Klipper (que es la guarda de verdad): aqui
+    // solo se avisa en pantalla, porque un error de Klipper no se ve en la UI.
+    if(pos.squeegee_up<=pos.squeegee_down){
+      showModal('<h2>'+t("ag_sq_err_title")+'</h2><p>'+t("ag_sq_err")+'</p><button class="mbtn" id="ag-err-ok">OK</button>');
+      $("ag-err-ok").onclick=closeModal;
+      return;
+    }
+    run("SET_CYCLE "+parts.join(" "));
+    closeSettings();
+  };
+
   // PARO DE EMERGENCIA (feature 010): RESET_ESTOP solo apaga el aviso; no
   // reenergiza ni homea (eso lo sigue haciendo HOME/HOME_OP a proposito).
-  estopResetBtn.onclick=function(){ if(estopResetBtn.disabled) return; run("RESET_ESTOP"); };
+  // En shutdown la unica salida es FIRMWARE_RESTART (Klipper no sale del
+  // shutdown de ninguna otra forma). run() no sirve: el gcode esta rechazado.
+  estopResetBtn.onclick=function(){
+    if(estopResetBtn.disabled) return;
+    st.estopLatch=0;
+    if(conn.klippyState==="shutdown"){ estopResetBtn.disabled=true; rpc("printer.firmware_restart"); }
+    else run("RESET_ESTOP");
+  };
   cMetaWrap.onclick=function(){ if(cMetaWrap.classList.contains("dis")||isRunning()) return; openKeypad(); };
 
   function showModal(html){ modalCard.innerHTML=html; modal.classList.remove("hidden"); }
@@ -761,27 +1228,31 @@
     document.title=t("doc_title");
     $("title").innerHTML=t("title_main")+"<small>"+t("title_sub")+"</small>";
     $("sz-title").innerHTML=t("tal_title")+"<small>"+t("title_sub")+"</small>";
+    $("ma-title").innerHTML=t("man_title")+"<small>"+t("title_sub")+"</small>";
+    $("mn-title").innerHTML=t("men_title")+"<small>"+t("title_sub")+"</small>";
+    $("ag-title").innerHTML=t("ag_title")+"<small>"+t("title_sub")+"</small>";
     var els=document.querySelectorAll("[data-i18n]");
     for(var i=0;i<els.length;i++){ els[i].textContent=t(els[i].getAttribute("data-i18n")); }
   }
   function setLang(l){ if(l!=="es"&&l!=="en"||l===lang) return; lang=l;
     try{ localStorage.setItem("ui_lang",l); }catch(e){}
     applyStaticI18n(); render();
-    if(!modal.classList.contains("hidden")) openMenu(); }
+    if(!mnView.classList.contains("hidden")) renderMenuScreen();
+    if(!agView.classList.contains("hidden")) renderSettings(); }
 
   // ----- teclado META -----
   function openKeypad(){
     var buf=(num(uiTarget,0)===0)?"":String(uiTarget);
     var rows=""; var keys=["1","2","3","4","5","6","7","8","9"];
-    for(var i=0;i<keys.length;i++) rows+='<button class="kp stepper" data-k="'+keys[i]+'" style="padding:3vmin 0;font-size:5.4vmin;">'+keys[i]+'</button>';
-    showModal('<h2>'+t("kp_title")+' <span></span></h2><div class="body">'+
+    for(var i=0;i<keys.length;i++) rows+='<button class="kp stepper" data-k="'+keys[i]+'" style="padding:2vmin 0;font-size:5.4vmin;">'+keys[i]+'</button>';
+    showModal('<h2>'+t("kp_title")+' <span></span></h2><div class="body"><div class="kpwrap"><div class="kpleft">'+
       '<div style="text-align:center;font-size:11vmin;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;padding:1vmin;margin-bottom:2vmin;background:var(--glass2);border:1px solid var(--stroke);border-radius:2vmin;box-shadow:var(--hi)"><span id="kpnum">∞</span><div style="font-size:2.6vmin;color:var(--muted);font-weight:600;letter-spacing:.08em">'+t("kp_hint")+'</div></div>'+
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.8vmin">'+rows+
-        '<button class="kp" data-k="C" style="padding:3vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:rgba(224,151,43,.25);color:#8a6414;box-shadow:var(--hi)">C</button>'+
-        '<button class="kp" data-k="0" style="padding:3vmin 0;font-size:5.4vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">0</button>'+
-        '<button class="kp" data-k="B" style="padding:3vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">⌫</button>'+
-      '</div></div>'+
-      '<div class="foot"><button class="mbtn ghost" id="kp-cancel">'+t("btn_cancel")+'</button><button class="mbtn" id="kp-ok">'+t("btn_ok")+'</button></div>');
+      '<div class="foot"><button class="mbtn ghost" id="kp-cancel">'+t("btn_cancel")+'</button><button class="mbtn" id="kp-ok">'+t("btn_ok")+'</button></div></div>'+
+      '<div class="kpgrid">'+rows+
+        '<button class="kp" data-k="C" style="padding:2vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:rgba(224,151,43,.25);color:#8a6414;box-shadow:var(--hi)">C</button>'+
+        '<button class="kp" data-k="0" style="padding:2vmin 0;font-size:5.4vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">0</button>'+
+        '<button class="kp" data-k="B" style="padding:2vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">⌫</button>'+
+      '</div></div></div>');
     modalCard.querySelectorAll(".kp").forEach(function(b){ b.style.cursor="pointer"; });
     function draw(){ $("kpnum").textContent=(buf===""||buf==="0")?"∞":buf; }
     draw();
@@ -791,86 +1262,42 @@
     $("kp-ok").onclick=function(){ uiTarget=(buf===""?0:parseInt(buf,10)); run("SAVE_VARIABLE VARIABLE=ui_target VALUE="+uiTarget); closeModal(); render(); };
   }
 
-  // ----- MENÚ (ajustes del ciclo + homing) -----
-  // min/max: limites fisicos reales de cada eje (ver printer.cfg). squeegee_up/down
-  // mueven X (position_min:-300 / position_max:300, calibracion 2026-09-03: squeegee_down
-  // quedo en -125, un valor NEGATIVO). pos_left/right mueven Y (0..200). Las velocidades
-  // no tienen limite fisico del eje, solo no deben ser negativas.
-  var PARAMS=[
-    {key:"pos_left",       labKey:"p_pos_left",     unit:"mm", step:1, def:0,   set:"POS_LEFT",      min:0,    max:200},
-    {key:"pos_right",      labKey:"p_pos_right",    unit:"mm", step:1, def:100, set:"POS_RIGHT",      min:0,    max:200},
-    {key:"squeegee_up",    labKey:"p_sq_up",        unit:"mm", step:1, def:10,  set:"SQUEEGEE_UP",    min:-300, max:300},
-    {key:"squeegee_down",  labKey:"p_sq_down",      unit:"mm", step:1, def:90,  set:"SQUEEGEE_DOWN",  min:-300, max:300},
-    {key:"stroke_speed",   labKey:"p_stroke_speed", unit:"mm/min", step:500, def:7000, set:"STROKE_SPEED",   min:0},
-    {key:"squeegee_speed", labKey:"p_sq_speed",     unit:"mm/min", step:500, def:7000, set:"SQUEEGEE_SPEED", min:0}
-  ];
-  function stepperRow(key,lab,unit,val){
-    return '<div class="srow" data-key="'+key+'"><div class="k">'+lab+'<small>'+unit+'</small></div>'+
-      '<div class="stepper"><button data-d="-1">−</button><span class="sv">'+val+'</span><button data-d="1">+</button></div></div>';
-  }
-  function wireStepper(row,step,mn,mx){
-    var sv=row.querySelector(".sv");
-    row.querySelectorAll(".stepper button").forEach(function(b){
-      b.onclick=function(){ var cur=num(sv.textContent,mn)+step*parseInt(b.getAttribute("data-d"),10);
-        if(cur<mn) cur=mn; if(mx!==undefined&&cur>mx) cur=mx; sv.textContent=cur; }; });
-  }
-  function openMenu(){
-    var v=st.vars||{}; var side=num(v.start_side,0);
-    var langRow='<div class="srow"><div class="k">'+t("mn_lang")+'</div>'+
-      '<div class="toggle" id="langtog"><button data-l="es" class="'+(lang==="es"?"on":"")+'">ES</button><button data-l="en" class="'+(lang==="en"?"on":"")+'">EN</button></div></div>';
-    // Selector de MODO (feature 005). Va PRIMERO en el bloque del ciclo porque
-    // cambia el significado de todo lo que viene debajo.
-    var modo=num(v.modo_carrusel,0);
-    var modeRow='<div class="srow"><div class="k">'+t("mn_mode")+'<small>'+t("mn_mode_hint")+'</small></div>'+
-      '<div class="toggle" id="modetog"><button data-m="0" class="'+(modo===0?"on":"")+'">'+t("mode_head")+'</button><button data-m="1" class="'+(modo===1?"on":"")+'">'+t("mode_carr")+'</button></div></div>';
-    var rows=modeRow+'<div class="srow"><div class="k">'+t("mn_side")+'<small>'+t("mn_side_hint")+'</small></div>'+
-      '<div class="toggle" id="sidetog"><button data-s="0" class="'+(side===0?"on":"")+'">'+t("side_left")+'</button><button data-s="1" class="'+(side===1?"on":"")+'">'+t("side_right")+'</button></div></div>';
-    PARAMS.forEach(function(p){ rows+=stepperRow(p.key,t(p.labKey),p.unit,num(v[p.key],p.def)); });
-    showModal('<h2>'+t("mn_title")+' <span></span></h2><div class="body">'+
-      langRow+
-      '<div class="subhead">'+t("mn_sub_cycle")+'</div>'+rows+
-      '<div class="subhead">'+t("mn_sub_home")+'</div>'+
-      stepperRow("__home",t("hs_lab"),t("hs_unit"),"…")+
-      '<div class="srow"><div class="note" id="hs-status">'+t("hs_note")+'</div>'+
-        '<button class="mbtn warn sm" id="hs-apply">'+t("hs_apply")+'</button></div>'+
-      '</div>'+
-      '<div class="foot"><button class="mbtn ghost" id="mn-cancel">'+t("btn_close")+'</button><button class="mbtn" id="mn-save">'+t("btn_save_cycle")+'</button></div>');
-
-    modalCard.querySelectorAll("#langtog button").forEach(function(b){ b.onclick=function(){ setLang(b.getAttribute("data-l")); }; });
-
-    var chosenSide=side;
-    modalCard.querySelectorAll("#sidetog button").forEach(function(b){ b.onclick=function(){ chosenSide=parseInt(b.getAttribute("data-s"),10);
-      modalCard.querySelectorAll("#sidetog button").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); }; });
-
-    var chosenModo=modo;
-    modalCard.querySelectorAll("#modetog button").forEach(function(b){ b.onclick=function(){ chosenModo=parseInt(b.getAttribute("data-m"),10);
-      modalCard.querySelectorAll("#modetog button").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); }; });
-    modalCard.querySelectorAll('.srow[data-key]').forEach(function(row){
-      var k=row.getAttribute("data-key");
-      if(k==="__home"){ wireStepper(row,5,5,200); }
-      else { var p=PARAMS.filter(function(x){return x.key===k;})[0]; wireStepper(row,p.step,p.min,p.max); }
-    });
-
-    $("mn-cancel").onclick=closeModal;
-    $("mn-save").onclick=function(){
-      // MODO= va en el mismo SET_CYCLE: una sola escritura, un solo guardado.
-      var parts=["MODO="+(chosenModo===1?"CARRUSEL":"CABEZA"),"START_SIDE="+chosenSide];
-      modalCard.querySelectorAll('.srow[data-key]').forEach(function(row){ var k=row.getAttribute("data-key"); if(k==="__home") return;
-        var p=PARAMS.filter(function(x){return x.key===k;})[0]; parts.push(p.set+"="+num(row.querySelector(".sv").textContent,p.def)); });
-      run("SET_CYCLE "+parts.join(" ")); closeModal();
-    };
-
-    // valor actual de homing_speed desde printer.cfg
-    var hsRow=modalCard.querySelector('.srow[data-key="__home"]'); var hsSv=hsRow.querySelector(".sv");
-    fetchHomingSpeed(function(val){ hsSv.textContent=(val===null)?"?":val; });
-
-    var armed=false, armTimer=null; var applyBtn=$("hs-apply");
-    applyBtn.onclick=function(){
-      var v2=num(hsSv.textContent,50); if(hsSv.textContent==="?"){ $("hs-status").textContent=t("hs_noread"); return; }
-      if(!armed){ armed=true; applyBtn.textContent=t("hs_confirm");
-        armTimer=setTimeout(function(){ armed=false; applyBtn.textContent=t("hs_apply"); },4000); return; }
-      clearTimeout(armTimer); armed=false; applyBtn.textContent=t("hs_apply"); applyBtn.disabled=true;
-      applyHomeSpeed(v2, function(msg){ $("hs-status").textContent=msg; });
+  // ----- teclado numérico genérico (pantalla AJUSTES) -----
+  // Como openKeypad() pero reutilizable para cualquier campo: título, valor
+  // inicial, min/max (con clamp al aceptar) y callback propios. openKeypad()
+  // se deja intacta para no tocar el flujo ya probado de la meta de ciclos.
+  function openNumpad(opts){
+    var buf=(opts.value===undefined||opts.value===null)?"":String(opts.value);
+    var allowNeg=(opts.min!==undefined&&opts.min<0);
+    var keys=["1","2","3","4","5","6","7","8","9"];
+    var rows=""; for(var i=0;i<keys.length;i++) rows+='<button class="kp stepper" data-k="'+keys[i]+'" style="padding:2vmin 0;font-size:5.4vmin;">'+keys[i]+'</button>';
+    showModal('<h2>'+opts.title+' <span></span></h2><div class="body"><div class="kpwrap"><div class="kpleft">'+
+      '<div style="text-align:center;font-size:11vmin;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;padding:1vmin;margin-bottom:2vmin;background:var(--glass2);border:1px solid var(--stroke);border-radius:2vmin;box-shadow:var(--hi)"><span id="npnum">0</span></div>'+
+      '<div class="foot"><button class="mbtn ghost" id="np-cancel">'+t("btn_cancel")+'</button><button class="mbtn" id="np-ok">'+t("btn_ok")+'</button></div></div>'+
+      '<div class="kpgrid">'+rows+
+        '<button class="kp" data-k="C" style="padding:2vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:rgba(224,151,43,.25);color:#8a6414;box-shadow:var(--hi)">C</button>'+
+        '<button class="kp" data-k="0" style="padding:2vmin 0;font-size:5.4vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">0</button>'+
+        (allowNeg
+          ? '<button class="kp" data-k="-" style="padding:2vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">−</button>'
+          : '<button class="kp" data-k="B" style="padding:2vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">⌫</button>')+
+        (allowNeg ? '<button class="kp" data-k="B" style="grid-column:1/-1;padding:2vmin 0;font-size:5vmin;font-weight:800;border-radius:1.6vmin;border:1px solid var(--stroke);background:var(--glass2);box-shadow:var(--hi)">⌫</button>' : '')+
+      '</div></div></div>');
+    modalCard.querySelectorAll(".kp").forEach(function(b){ b.style.cursor="pointer"; });
+    function draw(){ $("npnum").textContent=(buf===""||buf==="-")?"0":buf; }
+    draw();
+    modalCard.querySelectorAll(".kp").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-k");
+      if(k==="C") buf="";
+      else if(k==="B") buf=buf.slice(0,-1);
+      else if(k==="-"){ buf=(buf.charAt(0)==="-")?buf.slice(1):("-"+buf); }
+      else if(buf.replace("-","").length<6) buf=buf+k;
+      draw(); }; });
+    $("np-cancel").onclick=closeModal;
+    $("np-ok").onclick=function(){
+      var v=(buf===""||buf==="-")?0:parseInt(buf,10);
+      if(opts.min!==undefined&&v<opts.min) v=opts.min;
+      if(opts.max!==undefined&&v>opts.max) v=opts.max;
+      closeModal();
+      opts.onAccept(v);
     };
   }
 
@@ -892,31 +1319,6 @@
     $("st-close").onclick=closeModal;
   }
 
-  // ----- edición de homing_speed en printer.cfg vía Moonraker -----
-  function parseHomingSpeed(text){ var L=text.split(/\r?\n/), inY=false;
-    for(var i=0;i<L.length;i++){ var s=L[i].match(/^\s*\[([^\]]+)\]/); if(s){ inY=(s[1].trim()==="stepper_y"); continue; }
-      if(inY){ var m=L[i].match(/^\s*homing_speed\s*:\s*([\d.]+)/); if(m) return parseFloat(m[1]); } } return null; }
-  function replaceHomingSpeed(text,val){ var L=text.split(/\r?\n/), inY=false, done=false;
-    for(var i=0;i<L.length;i++){ var s=L[i].match(/^\s*\[([^\]]+)\]/); if(s){ inY=(s[1].trim()==="stepper_y"); continue; }
-      if(inY&&!done&&/^\s*homing_speed\s*:/.test(L[i])){ L[i]=L[i].replace(/(^\s*homing_speed\s*:\s*)[\d.]+/,"$1"+val); done=true; } }
-    return { text:L.join("\n"), done:done }; }
-  function fetchHomingSpeed(cb){ fetch("/server/files/config/printer.cfg",{cache:"no-store"})
-    .then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){ cb(parseHomingSpeed(t)); }).catch(function(){ cb(null); }); }
-  function uploadConfig(name,text){ var fd=new FormData(); fd.append("root","config");
-    fd.append("file", new Blob([text],{type:"text/plain"}), name); return fetch("/server/files/upload",{method:"POST",body:fd}); }
-  function applyHomeSpeed(val,cb){
-    cb(t("hs_reading"));
-    fetch("/server/files/config/printer.cfg",{cache:"no-store"})
-      .then(function(r){ if(!r.ok) throw new Error("GET "+r.status); return r.text(); })
-      .then(function(txt){ var res=replaceHomingSpeed(txt,val); if(!res.done) throw new Error(t("hs_nofield"));
-        cb(t("hs_backing"));
-        return uploadConfig("printer.cfg.bak."+tsStamp(),txt).then(function(b){ if(!b.ok) throw new Error("backup "+b.status);
-          cb(t("hs_saving")(val)); return uploadConfig("printer.cfg",res.text); }); })
-      .then(function(u){ if(!u.ok) throw new Error("upload "+u.status);
-        cb(t("hs_restarting")); rpc("printer.firmware_restart"); setTimeout(closeModal,1400); })
-      .catch(function(e){ cb("Error: "+(e.message||e)); });
-  }
-
   // ----- estado desde Moonraker -----
   function applyStatus(s){ if(!s) return;
     if(s.toolhead&&typeof s.toolhead.homed_axes==="string") st.homed=s.toolhead.homed_axes;
@@ -933,11 +1335,36 @@
       if(ix.homed!==undefined) st.indexHomed=ix.homed;
       if(ix.station!==undefined) st.indexStation=ix.station;
       if(ix.energizado!==undefined) st.indexEnergizado=ix.energizado;
+      if(ix.moving!==undefined) st.indexMoving=ix.moving;
     }
+    if(s.idle_timeout&&typeof s.idle_timeout.state==="string") st.busy=(s.idle_timeout.state==="Printing");
     var es=s["gcode_macro _ESTOP"];
     if(es){
       if(es.active!==undefined) st.estopActive=es.active;
-      if(es.fisico!==undefined) st.estopFisico=es.fisico;
+    }
+    // El estado del boton llega por el objeto del gcode_button, no por
+    // _ESTOP.fisico: la variable del macro la escribe press_gcode, que espera
+    // al mutex del gcode (hasta ~5s con un ciclo en marcha). last_state no.
+    var eb=s["gcode_button paro_emergencia"];
+    if(eb&&eb.state!==undefined){
+      st.estopBoton=(eb.state==="PRESSED")?1:0;
+      st.estopFisico=st.estopBoton;
+      // Enclavamiento local: una vez visto el paro, el aviso no se va solo
+      // aunque suelten el boton antes de que PARO_EMERGENCIA llegue a correr.
+      if(st.estopBoton===1) st.estopLatch=1;
+    }
+    // feature 012: posicion del marco (0 DESCONOCIDA / 1 ARRIBA / 2 ABAJO).
+    var ma=s["gcode_macro _MARCO"];
+    if(ma){
+      if(ma.homed!==undefined) st.marcoHomed=ma.homed;
+      if(ma.pos!==undefined) st.marcoPos=ma.pos;
+    }
+    // gcode_position llega como namedtuple -> array por JSON ([x,y,z,e]), asi
+    // que se lee defensivo: puede venir como objeto {x:...} o como [x,...].
+    var gm=s.gcode_move;
+    if(gm&&gm.gcode_position!==undefined){
+      var p=gm.gcode_position;
+      st.squeegeeX = (p && p.x!==undefined) ? p.x : (Array.isArray(p) ? p[0] : null);
     }
     render(); }
   function subscribeAndQuery(){ rpc("printer.objects.query",{objects:OBJS}); rpc("printer.objects.subscribe",{objects:OBJS}); }
@@ -947,13 +1374,14 @@
     try{ ws=new WebSocket(WS_URL); }catch(e){ scheduleReconnect(); return; }
     ws.onopen=function(){ conn.connected=true; rpc("printer.info"); render(); };
     ws.onmessage=function(ev){ var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+      if(m.id!==undefined&&rpcCbs[m.id]){ var cb=rpcCbs[m.id]; delete rpcCbs[m.id]; cb(m.error===undefined); }
       if(m.method==="notify_status_update"){ applyStatus(m.params&&m.params[0]); return; }
       if(m.method==="notify_klippy_ready"){ conn.klippy=true; conn.klippyState="ready"; subscribeAndQuery(); render(); return; }
       if(m.method==="notify_klippy_disconnected"){ conn.klippy=false; conn.klippyState="disconnected"; render(); return; }
       if(m.method==="notify_klippy_shutdown"){ conn.klippy=false; conn.klippyState="shutdown"; render(); return; }
       if(m.result!==undefined){ if(m.result.status){ conn.klippy=true; conn.klippyState="ready"; applyStatus(m.result.status); }
         else if(m.result.state){ conn.klippy=(m.result.state==="ready"); conn.klippyState=m.result.state; if(conn.klippy) subscribeAndQuery(); render(); } } };
-    ws.onclose=function(){ conn.connected=false; conn.klippy=false; render(); scheduleReconnect(); };
+    ws.onclose=function(){ conn.connected=false; conn.klippy=false; rpcCbsFail(); render(); scheduleReconnect(); };
     ws.onerror=function(){ try{ ws.close(); }catch(e){} };
   }
   function scheduleReconnect(){ if(rcTimer) return; rcTimer=setTimeout(function(){ rcTimer=null; connect(); },2000); }
