@@ -19,9 +19,9 @@ flowchart LR
 
     DX --> MX["Motor NEMA23<br/>23HS32-4004S"]
     DY --> MY["Motor NEMA23<br/>23HS32-4004S"]
-    DS --> MS["Motor (a confirmar)"]
+    DS --> MS["Motor NEMA23<br/>23HS32-4004S"]
     DI --> MI["Motor 86HS8040A4JEP<br/>+ reducción mecánica 6:1"]
-    DM --> MM["Motor (a confirmar)"]
+    DM --> MM["Motor NEMA23<br/>23HS32-4004S"]
 ```
 
 ## Lista de materiales eléctricos / electrónicos
@@ -40,9 +40,9 @@ flowchart LR
 |---|---|---|---|---|
 | **X** — Squeegee (sube/baja) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A pico/fase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, sin sensor físico) |
 | **Y** — Stroke (recorrido) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A pico/fase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, sin sensor físico) |
-| **Screen** — indexado de tallas | TMC5160 estándar (SPI) | Pendiente de confirmar (corriente provisional) | 2.0 A *(provisional)* | Switch/jumper en el zócalo del driver |
+| **Screen** — indexado de tallas | TMC5160 estándar (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A pico/fase, 2.4 Nm) | 2.0 A *(provisional)* | Switch/jumper en el zócalo del driver |
 | **Index** — carrusel de 4 estaciones | TMC5160T Plus (SPI), alimentación de potencia (HVIN) independiente a 24 V | 86HS8040A4JEP (4.0 A RMS de placa) + reducción mecánica 6:1 | 2.8 A | Sensor inductivo NPN |
-| **Marco** — sube/baja el cuadro quemado | TMC5160 (SPI) | Pendiente de confirmar | 1.2 A | Sensorless (StallGuard) contra el tope de arriba |
+| **Marco** — sube/baja el cuadro quemado | TMC5160 (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A pico/fase, 2.4 Nm) | 1.2 A | Sensorless (StallGuard) contra el tope de arriba |
 
 ### Sensores
 
@@ -53,7 +53,7 @@ flowchart LR
 ### Alimentación
 
 - Riel de **24 V DC** para los drivers de motor (nunca 48 V: los módulos comparten dominio de tensión con la placa por el zócalo).
-- Fuente/PSU: modelo y capacidad exactos pendientes de documentar aquí.
+- Fuente/PSU: **24 V, 12 A**. Modelo exacto pendiente de documentar aquí.
 
 ### Seguridad — paro de emergencia *(en desarrollo)*
 

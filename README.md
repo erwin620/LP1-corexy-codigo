@@ -19,9 +19,9 @@ flowchart LR
 
     DX --> MX["NEMA23 motor<br/>23HS32-4004S"]
     DY --> MY["NEMA23 motor<br/>23HS32-4004S"]
-    DS --> MS["Motor (to be confirmed)"]
+    DS --> MS["NEMA23 motor<br/>23HS32-4004S"]
     DI --> MI["Motor 86HS8040A4JEP<br/>+ 6:1 mechanical reduction"]
-    DM --> MM["Motor (to be confirmed)"]
+    DM --> MM["NEMA23 motor<br/>23HS32-4004S"]
 ```
 
 ## Electrical / electronic bill of materials
@@ -40,9 +40,9 @@ flowchart LR
 |---|---|---|---|---|
 | **X** — Squeegee (up/down) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, no physical sensor) |
 | **Y** — Stroke (travel) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, no physical sensor) |
-| **Screen** — size indexing | Standard TMC5160 (SPI) | To be confirmed (provisional current) | 2.0 A *(provisional)* | Switch/jumper on the driver socket |
+| **Screen** — size indexing | Standard TMC5160 (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A *(provisional)* | Switch/jumper on the driver socket |
 | **Index** — 4-station carousel | TMC5160T Plus (SPI), independent 24 V power supply (HVIN) | 86HS8040A4JEP (4.0 A RMS nameplate) + 6:1 mechanical reduction | 2.8 A | NPN inductive sensor |
-| **Frame** — raises/lowers the burned screen | TMC5160 (SPI) | To be confirmed | 1.2 A | Sensorless (StallGuard) against the upper stop |
+| **Frame** — raises/lowers the burned screen | TMC5160 (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 1.2 A | Sensorless (StallGuard) against the upper stop |
 
 ### Sensors
 
@@ -53,7 +53,7 @@ flowchart LR
 ### Power
 
 - **24 V DC** rail for the motor drivers (never 48 V: the modules share a voltage domain with the board through the socket).
-- PSU: exact model and capacity still to be documented here.
+- PSU: **24 V, 12 A**. Exact model still to be documented here.
 
 ### Safety — emergency stop *(in development)*
 
