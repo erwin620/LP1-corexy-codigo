@@ -1,123 +1,125 @@
-# LP1 — Máquina de serigrafía automática (CoreXY)
+# LP1 — Automatic Screen Printing Machine (CoreXY)
 
-Máquina de serigrafía comercial con cabeza CoreXY, controlada 100 % por una Raspberry Pi corriendo **Klipper**, que gobierna una placa **BTT Octopus V1.1** por USB. Este repositorio contiene el código y la configuración que corre en la máquina (sin material de documentación de desarrollo interno).
+[Español](README.es.md) · **English**
 
-## Arquitectura de control
+A commercial screen printing machine with a CoreXY head, controlled 100 % by a Raspberry Pi running **Klipper**, which drives a **BTT Octopus V1.1** board over USB. This repository contains the code and configuration that run on the machine (without internal development documentation).
+
+## Control architecture
 
 ```mermaid
 flowchart LR
-    Pi["Raspberry Pi 5<br/>Klipper + Moonraker + UI operador"] -- USB --> Octopus["BTT Octopus V1.1<br/>STM32F446ZE (firmware Klipper)"]
-    Pi -- HDMI / USB táctil --> Monitor["Monitor táctil Eyoyo<br/>(kiosco a pantalla completa)"]
+    Pi["Raspberry Pi 5<br/>Klipper + Moonraker + operator UI"] -- USB --> Octopus["BTT Octopus V1.1<br/>STM32F446ZE (Klipper firmware)"]
+    Pi -- HDMI / USB touch --> Monitor["Eyoyo touch monitor<br/>(full-screen kiosk)"]
 
-    Octopus -- SPI --> DX["Driver TMC5160T Plus<br/>Eje X — Squeegee"]
-    Octopus -- SPI --> DY["Driver TMC5160T Plus<br/>Eje Y — Stroke"]
-    Octopus -- SPI --> DS["Driver TMC5160<br/>Screen — indexado de tallas"]
-    Octopus -- SPI --> DI["Driver TMC5160T Plus<br/>Index — carrusel de estaciones"]
-    Octopus -- SPI --> DM["Driver TMC5160<br/>Marco — sube/baja el cuadro quemado"]
+    Octopus -- SPI --> DX["TMC5160T Plus driver<br/>X axis — Squeegee"]
+    Octopus -- SPI --> DY["TMC5160T Plus driver<br/>Y axis — Stroke"]
+    Octopus -- SPI --> DS["TMC5160 driver<br/>Screen — size indexing"]
+    Octopus -- SPI --> DI["TMC5160T Plus driver<br/>Index — station carousel"]
+    Octopus -- SPI --> DM["TMC5160 driver<br/>Frame — raises/lowers the burned screen"]
 
-    DX --> MX["Motor NEMA23<br/>23HS32-4004S"]
-    DY --> MY["Motor NEMA23<br/>23HS32-4004S"]
-    DS --> MS["Motor (a confirmar)"]
-    DI --> MI["Motor 86HS8040A4JEP<br/>+ reducción mecánica 6:1"]
-    DM --> MM["Motor (a confirmar)"]
+    DX --> MX["NEMA23 motor<br/>23HS32-4004S"]
+    DY --> MY["NEMA23 motor<br/>23HS32-4004S"]
+    DS --> MS["Motor (to be confirmed)"]
+    DI --> MI["Motor 86HS8040A4JEP<br/>+ 6:1 mechanical reduction"]
+    DM --> MM["Motor (to be confirmed)"]
 ```
 
-## Lista de materiales eléctricos / electrónicos
+## Electrical / electronic bill of materials
 
-### Control e interfaz
+### Control and interface
 
-| Componente | Modelo | Función |
+| Component | Model | Function |
 |---|---|---|
-| Computadora de control | Raspberry Pi 5 | Corre Klipper (host), Moonraker (API) y la interfaz web del operador |
-| Placa controladora | BTT Octopus V1.1 (MCU STM32F446ZE) | Ejecuta el firmware de Klipper; controla los drivers de motor por SPI |
-| Pantalla | Monitor táctil Eyoyo (HDMI + USB) | Interfaz del operador, en modo kiosco a pantalla completa |
+| Control computer | Raspberry Pi 5 | Runs Klipper (host), Moonraker (API) and the operator web interface |
+| Controller board | BTT Octopus V1.1 (STM32F446ZE MCU) | Runs the Klipper firmware; controls the motor drivers over SPI |
+| Display | Eyoyo touch monitor (HDMI + USB) | Operator interface, full-screen kiosk mode |
 
-### Drivers y motores por eje
+### Drivers and motors per axis
 
-| Eje / función | Driver | Motor | Corriente de trabajo | Home |
+| Axis / function | Driver | Motor | Working current | Home |
 |---|---|---|---|---|
-| **X** — Squeegee (sube/baja) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A pico/fase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, sin sensor físico) |
-| **Y** — Stroke (recorrido) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A pico/fase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, sin sensor físico) |
-| **Screen** — indexado de tallas | TMC5160 estándar (SPI) | Pendiente de confirmar (corriente provisional) | 2.0 A *(provisional)* | Switch/jumper en el zócalo del driver |
-| **Index** — carrusel de 4 estaciones | TMC5160T Plus (SPI), alimentación de potencia (HVIN) independiente a 24 V | 86HS8040A4JEP (4.0 A RMS de placa) + reducción mecánica 6:1 | 2.8 A | Sensor inductivo NPN |
-| **Marco** — sube/baja el cuadro quemado | TMC5160 (SPI) | Pendiente de confirmar | 1.2 A | Sensorless (StallGuard) contra el tope de arriba |
+| **X** — Squeegee (up/down) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, no physical sensor) |
+| **Y** — Stroke (travel) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, no physical sensor) |
+| **Screen** — size indexing | Standard TMC5160 (SPI) | To be confirmed (provisional current) | 2.0 A *(provisional)* | Switch/jumper on the driver socket |
+| **Index** — 4-station carousel | TMC5160T Plus (SPI), independent 24 V power supply (HVIN) | 86HS8040A4JEP (4.0 A RMS nameplate) + 6:1 mechanical reduction | 2.8 A | NPN inductive sensor |
+| **Frame** — raises/lowers the burned screen | TMC5160 (SPI) | To be confirmed | 1.2 A | Sensorless (StallGuard) against the upper stop |
 
-### Sensores
+### Sensors
 
-- **Sensor de parte** (detecta la prenda en el carrusel): fotoeléctrico difuso NPN.
-- **Home del carrusel (index):** sensor inductivo NPN.
-- **Home de X/Y y del marco:** sin sensor físico — se usa detección de stall (StallGuard) integrada en los propios drivers. La sensibilidad (`driver_SGT`) depende de la velocidad de home: si esta cambia, hay que recalibrarla.
+- **Part sensor** (detects the garment on the carousel): NPN diffuse photoelectric.
+- **Carousel (index) home:** NPN inductive sensor.
+- **X/Y and frame home:** no physical sensor — stall detection (StallGuard) built into the drivers is used. The sensitivity (`driver_SGT`) depends on the homing speed: if the speed changes, it must be recalibrated.
 
-### Alimentación
+### Power
 
-- Riel de **24 V DC** para los drivers de motor (nunca 48 V: los módulos comparten dominio de tensión con la placa por el zócalo).
-- Fuente/PSU: modelo y capacidad exactos pendientes de documentar aquí.
+- **24 V DC** rail for the motor drivers (never 48 V: the modules share a voltage domain with the board through the socket).
+- PSU: exact model and capacity still to be documented here.
 
-### Seguridad — paro de emergencia *(en desarrollo)*
+### Safety — emergency stop *(in development)*
 
-Botón industrial tipo "hongo" de doble contacto (NC + NA):
+Industrial mushroom button with two contacts (NC + NO):
 
 ```mermaid
 flowchart TD
-    PSU["Fuente 24 V DC"] --> NC{"Contacto NC del<br/>paro de emergencia"}
-    NC -->|reposo: circuito cerrado| Drivers["Drivers de motor<br/>(X, Y, Screen, Index, Marco)"]
-    NC -.presionado: ABRE.-> Corte["Corte real de energía<br/>100% hardware, sin pasar por software"]
+    PSU["24 V DC supply"] --> NC{"Emergency stop<br/>NC contact"}
+    NC -->|rest: circuit closed| Drivers["Motor drivers<br/>(X, Y, Screen, Index, Frame)"]
+    NC -.pressed: OPENS.-> Cut["Real power cut<br/>100% hardware, bypasses software"]
 
-    Boton["Botón de emergencia<br/>(hongo, NA + NC)"] -. contacto NA .-> GPIO["BTT Octopus<br/>pin GPIO"]
-    GPIO --> Aviso["Aviso en pantalla<br/>del operador (vía Klipper)"]
+    Button["Emergency button<br/>(mushroom, NO + NC)"] -. NO contact .-> GPIO["BTT Octopus<br/>GPIO pin"]
+    GPIO --> Alert["Alert on the operator<br/>screen (via Klipper)"]
 ```
 
-- **NC:** corta por hardware la alimentación de 24 V de los drivers — parada real e inmediata, independiente de Klipper/software.
-- **NA:** cableado desde 2026-09-23 a un pin de la Octopus. Al pulsarlo, Klipper entra en *shutdown* de inmediato (el MCU frena los motores en decenas de ms) y la pantalla muestra el aviso de paro; se sale con el botón RESET, que hace `FIRMWARE_RESTART`.
-- **NC:** **todavía sin cablear.** Mientras falte, el corte real de energía no existe: el botón detiene a Klipper pero no desconecta la potencia de los drivers. No confiar en él como paro de emergencia completo.
+- **NC (design):** cuts the drivers' 24 V supply in hardware — a real, immediate stop, independent of Klipper/software.
+- **NO:** wired since 2026-09-23 to an Octopus pin. When pressed, Klipper goes into *shutdown* immediately (the MCU stops the motors within tens of ms) and the screen shows the stop alert; it is cleared with the RESET button, which runs `FIRMWARE_RESTART`.
+- **NC:** **not wired yet.** Until it is, there is no real power cut: the button stops Klipper but does not disconnect power to the drivers. Do not rely on it as a complete emergency stop.
 
-## Mapeo de ejes (CoreXY)
+## Axis mapping (CoreXY)
 
-| Eje | Función | Sentido |
+| Axis | Function | Direction |
 |---|---|---|
-| **Y** | Stroke — recorrido largo del carro | `Y+` a un extremo, `Y-` al otro |
-| **X** | Squeegee — sube/baja | `X+` = subir (posición segura) · `X-` = bajar (hacia la malla) |
+| **Y** | Stroke — long carriage travel | `Y+` to one end, `Y-` to the other |
+| **X** | Squeegee — up/down | `X+` = up (safe position) · `X-` = down (towards the mesh) |
 
-> La cabeza es físicamente CoreXY (dos motores): el mismo sentido entre ambos produce stroke, sentidos opuestos producen squeegee. Esta relación puede invertirse si se retensa o remonta una banda — se revalida en máquina antes de operar.
+> The head is physically CoreXY (two motors): the same direction on both produces stroke, opposite directions produce squeegee. This relationship can flip if a belt is retensioned or refitted — re-verify on the machine before operating.
 
-## Ciclo de impresión
+## Print cycle
 
-El operador hace `HOME_ALL` (obligatorio: `START` no funciona sin home) y luego `START`. Cada ciclo de cabeza es:
+The operator runs `HOME_ALL` (mandatory: `START` does not work without homing) and then `START`. Each head cycle is:
 
-1. **Embarre:** el stroke viaja al otro extremo con el squeegee **y el marco arriba**, en vacío, para repartir la pintura (floatbar). En modo carrusel esto ocurre a la vez que gira el plato.
-2. **Bajada:** con `MARCO=SI`, el marco y el squeegee bajan **a la vez**.
-3. **Impresión:** el stroke regresa con el squeegee abajo. Esta es la pasada que imprime.
-4. **Subida:** el squeegee y el marco suben a la vez (el squeegee sale primero un tramo corto).
+1. **Flood:** the stroke travels to the other end with the squeegee **and the frame up**, empty, to spread the ink (floatbar). In carousel mode this happens while the platen rotates.
+2. **Lowering:** with `MARCO=SI`, the frame and the squeegee go down **at the same time**.
+3. **Print:** the stroke returns with the squeegee down. This is the pass that prints.
+4. **Raising:** the squeegee and the frame go up together (the squeegee leaves first by a short distance).
 
-Después, el carrusel avanza una estación (`INDEX_NEXT`). Con `MARCO=NO` el marco no participa.
+Then the carousel advances one station (`INDEX_NEXT`). With `MARCO=NO` the frame does not take part.
 
-**Modos:** *cabeza* (el ciclo empieza y termina en el lado de inicio) y *carrusel* (4 estaciones; el sensor de parte decide si se imprime o se salta la estación).
+**Modes:** *head* (the cycle starts and ends on the start side) and *carousel* (4 stations; the part sensor decides whether to print or skip the station).
 
-## Interfaz del operador
+## Operator interface
 
-Interfaz web en `ui/index.html`, servida en modo kiosco en la pantalla táctil:
+Web interface in `ui/index.html`, served in kiosk mode on the touch screen:
 
-- **Pantalla principal:** home, start/stop y estado del ciclo.
-- **MANUAL:** los mismos movimientos del ciclo, de uno en uno (marco abajo → stroke de ida → bajar squeegee → stroke de regreso imprimiendo → subir squeegee → marco arriba → avanzar carrusel). Usa las mismas posiciones, velocidades y aceleración que el ciclo automático, y tiene guardas: no deja moverse sin home, ni con el ciclo en marcha, ni bajar el squeegee con el marco fuera de su sitio.
-- **AJUSTES:** velocidad (escala 0–99, donde 99 equivale a 21 000 mm/min) y posiciones de cabeza e index.
-- **MENÚ:** acceso a AJUSTES y MANUAL, y selector de idioma.
-- **Paro de emergencia:** pantalla de aviso cuando se pulsa el botón físico.
+- **Main screen:** home, start/stop and cycle status.
+- **MANUAL:** the same cycle movements, one at a time (frame down → outbound stroke → lower squeegee → return stroke printing → raise squeegee → frame up → advance carousel). It uses the same positions, speeds and acceleration as the automatic cycle, and has guards: it refuses to move without homing, while the cycle is running, or to lower the squeegee with the frame out of position.
+- **SETTINGS (AJUSTES):** speed (0–99 scale, where 99 equals 21,000 mm/min) and head and index positions.
+- **MENU:** access to SETTINGS and MANUAL, plus the language selector.
+- **Emergency stop:** alert screen shown when the physical button is pressed.
 
-## Estructura del repositorio
+## Repository structure
 
-| Ruta | Contenido |
+| Path | Contents |
 |---|---|
-| `pi-config/printer.cfg` | Config principal de Klipper: ejes, drivers TMC5160, sensor de parte, botón de paro, override de `G28`. |
-| `pi-config/macros_ciclo.cfg` | Ciclo de impresión, bucle del carrusel, modos, parámetros del operador (`SET_CYCLE`). |
-| `pi-config/macros_marco.cfg` | Motor del marco: home sensorless, bajar/subir. |
-| `pi-config/macros_manual.cfg` | Macros de la pantalla MANUAL. |
-| `pi-config/macros_index.cfg` | Carrusel de 4 estaciones: home, indexado, sensor de parte. |
-| `pi-config/macros_screen.cfg` | Indexado de tallas del screen. |
-| `pi-config/variables.cfg` | Estado guardado del operador (posiciones calibradas, velocidades, modo). Klipper lo reescribe en caliente. |
-| `pi-config/moonraker.conf`, `fluidd.cfg`, `system/` | Moonraker, Fluidd y servicios del kiosco (nginx, Chromium). |
-| `pi-config/tests/validar_macros.py` | Validador que renderiza cada macro de forma aislada. |
-| `ui/` | Interfaz del operador. |
-| `boot/` | Pantalla de arranque (splash) y archivos originales de arranque de la Pi. |
-| `_legacy/` | Código antiguo (secuenciador Teensy/ESP32), solo como referencia histórica. |
+| `pi-config/printer.cfg` | Main Klipper config: axes, TMC5160 drivers, part sensor, stop button, `G28` override. |
+| `pi-config/macros_ciclo.cfg` | Print cycle, carousel loop, modes, operator parameters (`SET_CYCLE`). |
+| `pi-config/macros_marco.cfg` | Frame motor: sensorless home, lower/raise. |
+| `pi-config/macros_manual.cfg` | Macros for the MANUAL screen. |
+| `pi-config/macros_index.cfg` | 4-station carousel: home, indexing, part sensor. |
+| `pi-config/macros_screen.cfg` | Screen size indexing. |
+| `pi-config/variables.cfg` | Saved operator state (calibrated positions, speeds, mode). Klipper rewrites it live. |
+| `pi-config/moonraker.conf`, `fluidd.cfg`, `system/` | Moonraker, Fluidd and kiosk services (nginx, Chromium). |
+| `pi-config/tests/validar_macros.py` | Validator that renders each macro in isolation. |
+| `ui/` | Operator interface. |
+| `boot/` | Boot splash and the Pi's original boot files. |
+| `_legacy/` | Old code (Teensy/ESP32 sequencer), kept for historical reference only. |
 
-> **Importante:** la configuración que ejecuta la máquina vive en la Raspberry Pi (`~/printer_data/config/`). `pi-config/` es una copia versionada: editarla aquí no cambia nada en la máquina hasta desplegarla.
+> **Important:** the configuration the machine actually runs lives on the Raspberry Pi (`~/printer_data/config/`). `pi-config/` is a versioned copy: editing it here changes nothing on the machine until it is deployed.
