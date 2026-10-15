@@ -6,6 +6,10 @@ Sistema de control de una máquina de serigrafía automática comercial con cabe
 
 El proyecto sustituyó una arquitectura anterior basada en firmware Marlin, un secuenciador Teensy/ESP32 y una HMI Wecon por una única plataforma de control definida por software.
 
+## Demostración
+
+▶️ [Ver la máquina funcionando](media/lp1-demo.mp4)
+
 ## Aspectos destacados
 
 - **Control de movimiento de 5 ejes** con Klipper: cabeza CoreXY (stroke + squeegee), indexador del carrusel, indexador de tallas y elevación del marco.

@@ -6,6 +6,10 @@ Control system for a commercial automatic screen printing machine with a CoreXY 
 
 The project replaced an earlier architecture based on Marlin firmware, a Teensy/ESP32 sequencer and a Wecon HMI with a single, fully software-defined control stack.
 
+## Demo
+
+▶️ [Watch the machine running](media/lp1-demo.mp4)
+
 ## Highlights
 
 - **5-axis motion control** with Klipper: CoreXY head (stroke + squeegee), carousel indexer, screen size indexer and screen frame lift.
