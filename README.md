@@ -1,125 +1,135 @@
-# LP1 — Automatic Screen Printing Machine (CoreXY)
+# LP1 — Automatic Screen Printing Machine
 
 [Español](README.es.md) · **English**
 
-A commercial screen printing machine with a CoreXY head, controlled 100 % by a Raspberry Pi running **Klipper**, which drives a **BTT Octopus V1.1** board over USB. This repository contains the code and configuration that run on the machine (without internal development documentation).
+Control system for a commercial automatic screen printing machine with a CoreXY print head, a 4-station carousel and five stepper axes. The whole machine is driven by a **Raspberry Pi 5 running Klipper**, connected over USB to a **BTT Octopus V1.1** (STM32) board, with a custom touchscreen interface for the operator.
+
+The project replaced an earlier architecture based on Marlin firmware, a Teensy/ESP32 sequencer and a Wecon HMI with a single, fully software-defined control stack.
+
+## Highlights
+
+- **5-axis motion control** with Klipper: CoreXY head (stroke + squeegee), carousel indexer, screen size indexer and screen frame lift.
+- **Sensorless homing** (TMC5160 StallGuard) on four axes, calibrated per axis and per homing speed.
+- **Complete print cycle written as Klipper macros** (G-code + Jinja2): flood stroke, synchronized frame and squeegee motion, print stroke, carousel advance and part detection.
+- **Custom operator interface**: single-page HTML/JavaScript app talking to Moonraker over WebSocket (JSON-RPC), bilingual Spanish/English, running as a full-screen kiosk.
+- **Safety logic in software**: guarded manual mode, homing required before any cycle, emergency stop button with immediate firmware shutdown.
+- **Automated macro validation**: a Python test harness that renders every macro with Jinja2 exactly as Klipper does, before deploying to the machine.
 
 ## Control architecture
 
 ```mermaid
 flowchart LR
-    Pi["Raspberry Pi 5<br/>Klipper + Moonraker + operator UI"] -- USB --> Octopus["BTT Octopus V1.1<br/>STM32F446ZE (Klipper firmware)"]
-    Pi -- HDMI / USB touch --> Monitor["Eyoyo touch monitor<br/>(full-screen kiosk)"]
+    Pi["Raspberry Pi 5<br/>Klipper + Moonraker + operator UI"] -- USB --> Octopus["BTT Octopus V1.1<br/>STM32F446ZE · Klipper firmware"]
+    Pi -- HDMI / USB touch --> Monitor["Eyoyo touch monitor<br/>full-screen kiosk"]
 
-    Octopus -- SPI --> DX["TMC5160T Plus driver<br/>X axis — Squeegee"]
-    Octopus -- SPI --> DY["TMC5160T Plus driver<br/>Y axis — Stroke"]
-    Octopus -- SPI --> DS["TMC5160 driver<br/>Screen — size indexing"]
-    Octopus -- SPI --> DI["TMC5160T Plus driver<br/>Index — station carousel"]
-    Octopus -- SPI --> DM["TMC5160 driver<br/>Frame — raises/lowers the burned screen"]
+    Octopus -- SPI --> DX["TMC5160T Plus<br/>X axis · Squeegee"]
+    Octopus -- SPI --> DY["TMC5160T Plus<br/>Y axis · Stroke"]
+    Octopus -- SPI --> DS["TMC5160<br/>Screen · size indexing"]
+    Octopus -- SPI --> DI["TMC5160T Plus<br/>Index · station carousel"]
+    Octopus -- SPI --> DM["TMC5160<br/>Frame · screen lift"]
 
-    DX --> MX["NEMA23 motor<br/>23HS32-4004S"]
-    DY --> MY["NEMA23 motor<br/>23HS32-4004S"]
-    DS --> MS["NEMA23 motor<br/>23HS32-4004S"]
-    DI --> MI["Motor 86HS8040A4JEP<br/>+ 6:1 mechanical reduction"]
-    DM --> MM["NEMA23 motor<br/>23HS32-4004S"]
+    DX --> MX["NEMA23<br/>23HS32-4004S"]
+    DY --> MY["NEMA23<br/>23HS32-4004S"]
+    DS --> MS["NEMA23<br/>23HS32-4004S"]
+    DI --> MI["86HS8040A4JEP<br/>6:1 reduction"]
+    DM --> MM["NEMA23<br/>23HS32-4004S"]
 ```
 
-## Electrical / electronic bill of materials
+## Hardware
 
 ### Control and interface
 
-| Component | Model | Function |
+| Component | Model | Role |
 |---|---|---|
-| Control computer | Raspberry Pi 5 | Runs Klipper (host), Moonraker (API) and the operator web interface |
-| Controller board | BTT Octopus V1.1 (STM32F446ZE MCU) | Runs the Klipper firmware; controls the motor drivers over SPI |
-| Display | Eyoyo touch monitor (HDMI + USB) | Operator interface, full-screen kiosk mode |
+| Control computer | Raspberry Pi 5 | Runs Klipper host, Moonraker API and the operator web interface |
+| Controller board | BTT Octopus V1.1, STM32F446ZE | Runs the Klipper MCU firmware and drives all motor drivers over SPI |
+| Display | Eyoyo touch monitor, HDMI + USB | Operator interface in full-screen kiosk mode |
+| Power supply | 24 V DC, 12 A | Motor driver power rail |
 
-### Drivers and motors per axis
+### Axes, drivers and motors
 
-| Axis / function | Driver | Motor | Working current | Home |
-|---|---|---|---|---|
-| **X** — Squeegee (up/down) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, no physical sensor) |
-| **Y** — Stroke (travel) | TMC5160T Plus (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A | Sensorless (StallGuard, no physical sensor) |
-| **Screen** — size indexing | Standard TMC5160 (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 2.0 A *(provisional)* | Switch/jumper on the driver socket |
-| **Index** — 4-station carousel | TMC5160T Plus (SPI), independent 24 V power supply (HVIN) | 86HS8040A4JEP (4.0 A RMS nameplate) + 6:1 mechanical reduction | 2.8 A | NPN inductive sensor |
-| **Frame** — raises/lowers the burned screen | TMC5160 (SPI) | NEMA23 StepperOnline 23HS32-4004S (4.0 A peak/phase, 2.4 Nm) | 1.2 A | Sensorless (StallGuard) against the upper stop |
+| Axis | Function | Driver | Motor | Run current | Homing |
+|---|---|---|---|---|---|
+| **X** | Squeegee up/down | TMC5160T Plus, SPI | NEMA23 StepperOnline 23HS32-4004S, 2.4 Nm | 2.0 A | Sensorless, StallGuard |
+| **Y** | Stroke, long carriage travel | TMC5160T Plus, SPI | NEMA23 StepperOnline 23HS32-4004S, 2.4 Nm | 2.0 A | Sensorless, StallGuard |
+| **Screen** | Size indexing | TMC5160, SPI | NEMA23 StepperOnline 23HS32-4004S, 2.4 Nm | 2.0 A | Sensorless, StallGuard |
+| **Index** | 4-station carousel | TMC5160T Plus, SPI, dedicated 24 V HVIN | 86HS8040A4JEP with 6:1 mechanical reduction | 2.8 A | NPN inductive sensor |
+| **Frame** | Raises and lowers the screen frame | TMC5160, SPI | NEMA23 StepperOnline 23HS32-4004S, 2.4 Nm | 1.2 A | Sensorless, StallGuard |
 
-### Sensors
+All drivers run in SpreadCycle mode for maximum torque and reliable stall detection.
 
-- **Part sensor** (detects the garment on the carousel): NPN diffuse photoelectric.
-- **Carousel (index) home:** NPN inductive sensor.
-- **X/Y and frame home:** no physical sensor — stall detection (StallGuard) built into the drivers is used. The sensitivity (`driver_SGT`) depends on the homing speed: if the speed changes, it must be recalibrated.
+### Sensors and inputs
 
-### Power
-
-- **24 V DC** rail for the motor drivers (never 48 V: the modules share a voltage domain with the board through the socket).
-- PSU: **24 V, 12 A**. Exact model still to be documented here.
-
-### Safety — emergency stop *(in development)*
-
-Industrial mushroom button with two contacts (NC + NO):
-
-```mermaid
-flowchart TD
-    PSU["24 V DC supply"] --> NC{"Emergency stop<br/>NC contact"}
-    NC -->|rest: circuit closed| Drivers["Motor drivers<br/>(X, Y, Screen, Index, Frame)"]
-    NC -.pressed: OPENS.-> Cut["Real power cut<br/>100% hardware, bypasses software"]
-
-    Button["Emergency button<br/>(mushroom, NO + NC)"] -. NO contact .-> GPIO["BTT Octopus<br/>GPIO pin"]
-    GPIO --> Alert["Alert on the operator<br/>screen (via Klipper)"]
-```
-
-- **NC (design):** cuts the drivers' 24 V supply in hardware — a real, immediate stop, independent of Klipper/software.
-- **NO:** wired since 2026-09-23 to an Octopus pin. When pressed, Klipper goes into *shutdown* immediately (the MCU stops the motors within tens of ms) and the screen shows the stop alert; it is cleared with the RESET button, which runs `FIRMWARE_RESTART`.
-- **NC:** **not wired yet.** Until it is, there is no real power cut: the button stops Klipper but does not disconnect power to the drivers. Do not rely on it as a complete emergency stop.
+- **Part sensor:** NPN diffuse photoelectric sensor that detects the garment on the carousel, so empty stations are skipped automatically.
+- **Carousel home:** NPN inductive sensor.
+- **Emergency stop:** industrial mushroom button wired to the Octopus; pressing it shuts the firmware down immediately and the motors stop within tens of milliseconds.
 
 ## Axis mapping (CoreXY)
 
 | Axis | Function | Direction |
 |---|---|---|
-| **Y** | Stroke — long carriage travel | `Y+` to one end, `Y-` to the other |
-| **X** | Squeegee — up/down | `X+` = up (safe position) · `X-` = down (towards the mesh) |
+| **Y** | Stroke | `Y+` towards one end, `Y-` towards the other |
+| **X** | Squeegee | `X+` = up, safe position · `X-` = down, towards the mesh |
 
-> The head is physically CoreXY (two motors): the same direction on both produces stroke, opposite directions produce squeegee. This relationship can flip if a belt is retensioned or refitted — re-verify on the machine before operating.
+The head is mechanically CoreXY: both motors turning the same way produce the stroke, turning in opposite directions produce the squeegee movement.
 
 ## Print cycle
 
-The operator runs `HOME_ALL` (mandatory: `START` does not work without homing) and then `START`. Each head cycle is:
+The operator homes the machine with `HOME_ALL` and starts production with `START`. Each print cycle is:
 
-1. **Flood:** the stroke travels to the other end with the squeegee **and the frame up**, empty, to spread the ink (floatbar). In carousel mode this happens while the platen rotates.
-2. **Lowering:** with `MARCO=SI`, the frame and the squeegee go down **at the same time**.
-3. **Print:** the stroke returns with the squeegee down. This is the pass that prints.
-4. **Raising:** the squeegee and the frame go up together (the squeegee leaves first by a short distance).
+1. **Flood stroke:** the carriage travels to the far end with the squeegee and the frame raised, spreading ink over the screen with the floodbar. In carousel mode this runs while the carousel is rotating, to save cycle time.
+2. **Lowering:** the frame and the squeegee go down together.
+3. **Print stroke:** the carriage returns with the squeegee down, printing the garment.
+4. **Raising:** the squeegee and the frame go up together, with the squeegee leaving the mesh first.
+5. **Carousel advance:** the carousel indexes to the next station. The part sensor decides whether the next station is printed or skipped.
 
-Then the carousel advances one station (`INDEX_NEXT`). With `MARCO=NO` the frame does not take part.
-
-**Modes:** *head* (the cycle starts and ends on the start side) and *carousel* (4 stations; the part sensor decides whether to print or skip the station).
+Two operating modes are available: **head mode**, a single print station, and **carousel mode**, a continuous 4-station loop. All cycle parameters — positions, speeds, start side and frame on/off — are adjusted from the touchscreen and persisted on the machine.
 
 ## Operator interface
 
-Web interface in `ui/index.html`, served in kiosk mode on the touch screen:
+A touchscreen web application in `ui/index.html`, launched at boot as a kiosk: cage + Chromium as a systemd service, with a custom Plymouth boot splash.
 
-- **Main screen:** home, start/stop and cycle status.
-- **MANUAL:** the same cycle movements, one at a time (frame down → outbound stroke → lower squeegee → return stroke printing → raise squeegee → frame up → advance carousel). It uses the same positions, speeds and acceleration as the automatic cycle, and has guards: it refuses to move without homing, while the cycle is running, or to lower the squeegee with the frame out of position.
-- **SETTINGS (AJUSTES):** speed (0–99 scale, where 99 equals 21,000 mm/min) and head and index positions.
-- **MENU:** access to SETTINGS and MANUAL, plus the language selector.
-- **Emergency stop:** alert screen shown when the physical button is pressed.
+- **Main screen:** homing, start/stop and live cycle status.
+- **Manual mode:** every step of the automatic cycle available as an individual button, so operators can also produce step by step. It uses exactly the same positions, speeds and accelerations as the automatic cycle, and guards against unsafe actions: no motion without homing, no motion while a cycle is running, and no squeegee descent unless the frame is in position.
+- **Settings:** speed on a 0–99 scale, with 99 equal to 21,000 mm/min, plus head and carousel positions.
+- **Menu:** access to settings, manual mode and language selection.
+- **Emergency stop screen:** shown as soon as the physical button is pressed, with a reset button to restart the firmware.
+
+## Engineering notes
+
+Some of the problems solved during development:
+
+- **StallGuard calibration depends on speed.** The stall threshold that homes reliably at one speed fails at another, so each sensorless axis was calibrated by bisection at its actual homing speed and acceleration, and the homing macros pin those values explicitly.
+- **Asynchronous sensors inside Klipper.** Measurements showed that `gcode_button` events are queued until the running macro finishes. The carousel loop was redesigned as a two-step cycle — one step to move, one to read the part flag — so detections are never lost.
+- **Motion profile limits.** On short moves the velocity profile is triangular and the commanded speed is never reached; peak speed is bounded by √(acceleration × distance). Acceleration was raised step by step and verified against homing repeatability to detect lost steps.
+- **Configuration load order.** Virtual endstop pins from the TMC drivers must be registered before the stepper that uses them, which defines the section order in `printer.cfg`.
+- **Safe state after motor release.** `M84`/`M18` are intercepted so that any motor release aborts the running cycle and invalidates all homes, forcing a new homing before production resumes.
+- **One source of truth.** Manual and automatic modes read the same saved parameters, so a change in settings applies to both and they can never print differently.
 
 ## Repository structure
 
 | Path | Contents |
 |---|---|
-| `pi-config/printer.cfg` | Main Klipper config: axes, TMC5160 drivers, part sensor, stop button, `G28` override. |
-| `pi-config/macros_ciclo.cfg` | Print cycle, carousel loop, modes, operator parameters (`SET_CYCLE`). |
-| `pi-config/macros_marco.cfg` | Frame motor: sensorless home, lower/raise. |
-| `pi-config/macros_manual.cfg` | Macros for the MANUAL screen. |
-| `pi-config/macros_index.cfg` | 4-station carousel: home, indexing, part sensor. |
+| `pi-config/printer.cfg` | Main Klipper configuration: axes, TMC5160 drivers, part sensor, emergency stop, `G28` override. |
+| `pi-config/macros_ciclo.cfg` | Print cycle, carousel loop, operating modes and operator parameters (`SET_CYCLE`). |
+| `pi-config/macros_marco.cfg` | Frame motor: sensorless homing, lowering and raising. |
+| `pi-config/macros_manual.cfg` | Manual mode macros. |
+| `pi-config/macros_index.cfg` | 4-station carousel: homing, indexing and part sensor. |
 | `pi-config/macros_screen.cfg` | Screen size indexing. |
-| `pi-config/variables.cfg` | Saved operator state (calibrated positions, speeds, mode). Klipper rewrites it live. |
-| `pi-config/moonraker.conf`, `fluidd.cfg`, `system/` | Moonraker, Fluidd and kiosk services (nginx, Chromium). |
-| `pi-config/tests/validar_macros.py` | Validator that renders each macro in isolation. |
-| `ui/` | Operator interface. |
-| `boot/` | Boot splash and the Pi's original boot files. |
-| `_legacy/` | Old code (Teensy/ESP32 sequencer), kept for historical reference only. |
+| `pi-config/variables.cfg` | Persisted operator settings: calibrated positions, speeds and mode. |
+| `pi-config/moonraker.conf`, `fluidd.cfg`, `system/` | Moonraker, Fluidd and kiosk services: nginx, cage and Chromium. |
+| `pi-config/tests/validar_macros.py` | Macro validator that renders every macro with Jinja2 as Klipper does. |
+| `ui/` | Operator touchscreen interface. |
+| `boot/` | Custom boot splash and Raspberry Pi boot configuration. |
+| `_legacy/` | Previous Teensy/ESP32 sequencer firmware, kept for reference. |
 
-> **Important:** the configuration the machine actually runs lives on the Raspberry Pi (`~/printer_data/config/`). `pi-config/` is a versioned copy: editing it here changes nothing on the machine until it is deployed.
+The live configuration runs on the Raspberry Pi in `~/printer_data/config/`; `pi-config/` is its version-controlled copy and is deployed to the machine after every change.
+
+## Roadmap
+
+- Hardware power cut on the emergency stop: wire the button's NC contact in series with the 24 V driver supply, so the stop no longer depends on the controller.
+- Calibrate squeegee and frame travel in real millimetres.
+
+## Tech stack
+
+Klipper · Moonraker · Raspberry Pi OS · STM32 · TMC5160 · G-code / Jinja2 macros · HTML / CSS / JavaScript · WebSocket JSON-RPC · Python · systemd · nginx · Git
