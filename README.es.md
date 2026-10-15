@@ -8,7 +8,11 @@ El proyecto sustituyó una arquitectura anterior basada en firmware Marlin, un s
 
 ## Demostración
 
-▶️ [Ver la máquina funcionando](media/lp1-demo.mp4)
+
+
+Uploading lp1-demo.mp4…
+
+
 
 ## Aspectos destacados
 
