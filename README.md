@@ -8,7 +8,11 @@ The project replaced an earlier architecture based on Marlin firmware, a Teensy/
 
 ## Demo
 
-▶️ [Watch the machine running](media/lp1-demo.mp4)
+
+
+https://github.com/user-attachments/assets/4ce9b92d-8924-4bed-bdc7-78e86854125c
+
+
 
 ## Highlights
 
