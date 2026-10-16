@@ -10,7 +10,11 @@ El proyecto sustituyó una arquitectura anterior basada en firmware Marlin, un s
 
 
 
-Uploading lp1-demo.mp4…
+
+
+https://github.com/user-attachments/assets/c0476378-dec0-4a6f-bca2-bbb95acb78f8
+
+
 
 
 
