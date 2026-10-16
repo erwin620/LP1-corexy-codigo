@@ -1,22 +1,16 @@
-// =============================================================================
-//  Secuenciador de maquina serigrafica  -  esqueleto (Fase 1)
-// =============================================================================
-//  Objetivo de esta primera pieza: validar el PUENTE G-code con el Octopus.
-//  Se maneja por la consola USB del Teensy (sin HMI ni Modbus todavia):
-//     s = start    x = stop    p = pause    r = resume    h = home    ? = estado
+// Secuenciador de máquina serigráfica: envía el ciclo de impresión como G-code
+// a Marlin (placa Octopus) y espera el "ok" de cada línea.
 //
-//  Arquitectura (cooperativa, un solo loop, portable a ESP32/STM32):
-//     loop() -> gcode.pump()  (avanza el envio y lee "ok", NO bloquea)
-//            -> seq.tick()    (maquina de estados del ciclo)
-//            -> console()     (comandos de prueba por USB)
-//     Nada bloquea, para que en el futuro el Modbus siga respondiendo al HMI
-//     incluso durante un movimiento largo.
-// =============================================================================
+// Esta versión se maneja por la consola USB del Teensy, sin HMI ni Modbus:
+//    s = start  x = stop  p = pause  r = resume  h = home  f = reset-fault  ? = estado
+//
+// Multitarea cooperativa en un solo loop(), portable a ESP32/STM32. Ninguna
+// tarea bloquea, para que el esclavo Modbus pueda seguir respondiendo al HMI
+// durante un movimiento largo.
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "config.h"
 
-// ------------------------------------------------------------------ Estados
 enum State : uint16_t { ST_IDLE, ST_HOMING, ST_RUNNING, ST_PAUSED, ST_FAULT };
 static const char* stateName(State s) {
   switch (s) { case ST_IDLE:return"IDLE"; case ST_HOMING:return"HOMING";
@@ -24,9 +18,7 @@ static const char* stateName(State s) {
     case ST_FAULT:return"FAULT"; } return "?";
 }
 
-// ======================================================================
-//  GcodeBridge  -  envia una linea, espera "ok" (no bloqueante)
-// ======================================================================
+// Envía una línea de G-code y espera el "ok" sin bloquear.
 class GcodeBridge {
 public:
   void begin() { GCODE_PORT.begin(GCODE_BAUD); }
@@ -34,7 +26,7 @@ public:
   bool busy()  const { return waiting_; }
   bool fault() const { return fault_; }
 
-  // Encola una linea para enviar. Devuelve false si ya hay una en curso.
+  // Devuelve false si todavía hay una línea esperando su "ok".
   bool send(const char* line, uint32_t timeout = OK_TIMEOUT_MS) {
     if (waiting_) return false;
     GCODE_PORT.print(line);
@@ -44,7 +36,8 @@ public:
     return true;
   }
 
-  // Debe llamarse seguido. Lee la respuesta de Marlin y libera al ver "ok".
+  // Debe llamarse en cada vuelta de loop(): lee la respuesta de Marlin y
+  // detecta el timeout.
   void pump() {
     if (!waiting_) return;
 
@@ -67,16 +60,14 @@ public:
 
 private:
   void handleLine(const char* s) {
-    // "busy" -> Marlin sigue vivo trabajando: reinicia el timeout.
+    // "busy": Marlin sigue ejecutando el comando; se reinicia el timeout.
     if (strstr(s, "busy")) { t0_ = millis(); return; }
-    // Errores de Marlin.
     if (s[0] == '!' || strstr(s, "Error")) {
       DBG.print("!! Marlin error: "); DBG.println(s);
       fault_ = true; waiting_ = false; return;
     }
-    // Fin de comando.
     if (strncmp(s, "ok", 2) == 0) { waiting_ = false; return; }
-    // Cualquier otra cosa (temperaturas, echo...) se ignora aqui.
+    // El resto (temperaturas, echo...) se ignora.
   }
 
   bool     waiting_ = false;
@@ -86,9 +77,7 @@ private:
   int      rxlen_ = 0;
 };
 
-// ======================================================================
-//  Sequencer  -  maquina de estados del ciclo serigrafico
-// ======================================================================
+// Máquina de estados del ciclo serigráfico.
 class Sequencer {
 public:
   void begin(GcodeBridge* g) {
@@ -111,18 +100,17 @@ public:
   void setRecipe(const Recipe& r) { recipe_ = r; }
 
   void tick() {
-    // Falla del puente => a FAULT.
     if (gc_->fault() && state_ != ST_FAULT) {
       state_ = ST_FAULT; saveCounter(); return;
     }
-    if (gc_->busy()) return;              // esperando "ok": no avanzar
+    if (gc_->busy()) return;
 
     switch (state_) {
       case ST_HOMING:  tickHoming();  break;
       case ST_RUNNING: tickRunning(); break;
-      case ST_PAUSED:  /* nada */     break;
-      case ST_FAULT:   /* requiere reset-fault */ break;
-      case ST_IDLE:    /* nada */     break;
+      case ST_PAUSED:                 break;
+      case ST_FAULT:   /* sale solo con resetFault() */ break;
+      case ST_IDLE:                   break;
     }
   }
 
@@ -131,13 +119,12 @@ public:
   }
 
 private:
-  // ---- Secuencia de HOMING ----
   void tickHoming() {
     char buf[GCODE_LINE_MAXLEN];
     switch (step_) {
-      case 0: gc_->send("M17"); step_++; break;                 // motores ON
+      case 0: gc_->send("M17"); step_++; break;                 // habilita motores
       case 1: snprintf(buf,sizeof(buf),"M914 Y%u",recipe_.stall_sens_y);
-              gc_->send(buf); step_++; break;                   // sensibilidad stall
+              gc_->send(buf); step_++; break;                   // sensibilidad de stall
     #if HOME_X_ON_START
       case 2: gc_->send("G28 X", HOMING_TIMEOUT_MS); step_++; break;
     #else
@@ -152,12 +139,12 @@ private:
       default:
         step_ = 0;
         state_ = runAfterHome_ ? ST_RUNNING : ST_IDLE;
-        runAfterHome_ = true;   // por defecto start() encadena a RUNNING
+        runAfterHome_ = true;   // home() lo apaga para una sola orden; start() encadena el ciclo
         break;
     }
   }
 
-  // ---- Un ciclo de impresion (se repite) ----
+  // Un ciclo de impresión; se repite hasta stop o pause.
   void tickRunning() {
     char buf[GCODE_LINE_MAXLEN];
     switch (step_) {
@@ -173,7 +160,7 @@ private:
         step_ = 0;
         cycles_++;
         if (cycles_ % COUNTER_SAVE_EVERY == 0) saveCounter();
-        // Parar / pausar solo entre ciclos completos (posicion consistente).
+        // Parar o pausar solo entre ciclos completos, con la posición conocida.
         if (stopReq_)  { stopReq_ = false; saveCounter(); state_ = ST_IDLE; }
         else if (pauseReq_) { pauseReq_ = false; saveCounter(); state_ = ST_PAUSED; }
         break;
@@ -190,9 +177,6 @@ private:
   bool     stopReq_ = false, pauseReq_ = false, runAfterHome_ = true;
 };
 
-// ======================================================================
-//  Instancias globales + consola de prueba
-// ======================================================================
 GcodeBridge gcode;
 Sequencer   seq;
 
@@ -220,7 +204,7 @@ static void console() {
 void setup() {
   DBG.begin(DBG_BAUD);
   uint32_t t = millis();
-  while (!DBG && millis() - t < 2000) { /* espera USB hasta 2s */ }
+  while (!DBG && millis() - t < 2000) { /* espera la consola USB hasta 2 s */ }
   gcode.begin();
   seq.begin(&gcode);
   DBG.println("== Secuenciador serigrafico (Fase 1: puente G-code) ==");
@@ -229,8 +213,7 @@ void setup() {
 }
 
 void loop() {
-  gcode.pump();   // lee "ok"/"busy" del Octopus (no bloquea)
-  seq.tick();     // avanza el ciclo
-  console();      // comandos de prueba por USB
-  // TODO Fase 2: modbus.poll();  // atender al HMI Wecon (siempre responsivo)
+  gcode.pump();
+  seq.tick();
+  console();
 }

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Espera a que respondan la interfaz (nginx) y la API de Moonraker antes de
+# lanzar el kiosco: si Chromium abre antes, muestra una página de error.
+# Termina siempre con 0 para que el kiosco arranque aunque se agote el plazo.
 UI="http://localhost/serigrafia/"
 MK="http://localhost:7125/server/info"
 end=$((SECONDS+180))

@@ -16,13 +16,12 @@
     --ok:#17a06a; --bad:#e5484d; --warn:#e0972b;
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
-  /* Cursor del mouse (feature 009): oculto por defecto, el JS lo muestra solo
-     cuando detecta un mouse fisico real (pointerType "mouse"), nunca con toques. */
+  /* Cursor oculto por defecto; el script solo lo muestra ante un ratón físico. */
   body.cursor-hidden, body.cursor-hidden *{ cursor:none !important; }
   html,body{ margin:0; height:100%; overflow:hidden; touch-action:manipulation; color:var(--txt);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;
     background:linear-gradient(135deg,#f4f7fc,#e9eff8); }
-  /* fondo de blobs de color (le da al vidrio algo que refractar) */
+  /* Fondo de manchas de color: da al efecto de vidrio algo que difuminar. */
   #bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; }
   .blob{ position:absolute; width:52vmax; height:52vmax; border-radius:50%; filter:blur(60px); opacity:.55; }
   .b1{ background:#8ec5ff; top:-16vmax; left:-10vmax; animation:f1 24s ease-in-out infinite alternate; }
@@ -38,7 +37,7 @@
   .glass{ background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
     border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
 
-  /* ---------- TOP ---------- */
+  /* --- Barra superior --- */
   #top{ display:flex; align-items:center; gap:2vmin; padding:1.8vmin 2.6vmin; border-bottom:1px solid var(--hair);
     background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
     -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); }
@@ -55,20 +54,19 @@
   .pill.bad{ color:#b3363a; } .pill.bad .dot{ background:var(--bad); box-shadow:0 0 1.2vmin rgba(229,72,77,.7); }
   @keyframes breathe{ 0%,100%{opacity:1} 50%{opacity:.4} }
 
-  /* ---------- STATUS ---------- */
+  /* --- Línea de estado --- */
   #statuswrap{ padding:1.8vmin 2.6vmin 0; }
   #status{ position:relative; overflow:hidden; display:flex; align-items:center; gap:2vmin; padding:2vmin 2.6vmin;
     border-radius:2.4vmin; font-size:3.2vmin; font-weight:600; color:var(--txt);
     background:var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
     border:1px solid var(--stroke); box-shadow:var(--shadow),var(--hi); }
   #status .sdot{ width:2.6vmin; height:2.6vmin; border-radius:50%; background:var(--muted2); flex:0 0 auto; }
-  /* Chips de modo / homes / simulacion (feature 005). Mismo lenguaje visual que
-     el resto: glass + borde fino. Compactos para no robarle sitio al boton. */
-  /* Splash de arranque (feature 008): tapa TODO hasta que la maquina responde. */
+  /* Pantalla de arranque: cubre todo hasta que la máquina responde. */
   #splash{ position:fixed; inset:0; z-index:9999; background:#000;
     display:flex; align-items:center; justify-content:center; }
   #splash img{ width:100%; height:100%; object-fit:contain; }
   #splash.fuera{ opacity:0; pointer-events:none; transition:opacity .45s ease; }
+  /* Chips de modo, homes y simulación: compactos para no quitar espacio al botón principal. */
   #chips{ display:flex; flex-wrap:wrap; gap:1.4vmin; padding:1.4vmin 2.6vmin 0; justify-content:center; }
   #chips .chip{ display:inline-flex; align-items:center; gap:1.1vmin; padding:1vmin 2vmin;
     border-radius:1.8vmin; font-size:2.5vmin; font-weight:700; letter-spacing:.02em; color:var(--muted);
@@ -78,7 +76,7 @@
   #chips .chip.ok{ color:var(--txt); } #chips .chip.ok::before{ background:var(--ok); }
   #chips .chip.warn{ color:var(--txt); } #chips .chip.warn::before{ background:var(--warn); box-shadow:0 0 1.2vmin rgba(224,151,43,.7); }
   #chips .chip.info::before{ background:var(--accent); }
-  /* La simulacion tiene que CANTAR: es el estado en el que la maquina no imprime. */
+  /* La simulación debe destacar: en ese estado la máquina no imprime. */
   #chips .chip.sim{ color:#fff; background:rgba(224,151,43,.92); border-color:rgba(224,151,43,.5); }
   #chips .chip.sim::before{ background:#fff; }
   #chips .chip.hidden{ display:none; }
@@ -89,7 +87,7 @@
     transform:translateX(-100%); animation:sweep 1.9s linear infinite; }
   @keyframes sweep{ to{ transform:translateX(100%); } }
 
-  /* ---------- CENTER ---------- */
+  /* --- Zona central --- */
   #content{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3vmin; padding:2.4vmin; min-height:0; }
   #counters{ display:flex; gap:3vmin; }
   .counter{ min-width:30vmin; text-align:center; padding:1.8vmin 3vmin 2.2vmin; border-radius:2.6vmin; position:relative;
@@ -122,7 +120,7 @@
   @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(229,72,77,.45)} 70%{box-shadow:0 0 0 6vmin rgba(229,72,77,0)} 100%{box-shadow:0 0 0 0 rgba(229,72,77,0)} }
   .btnstack{ position:relative; display:flex; align-items:center; justify-content:center; }
 
-  /* ---------- BOTTOM ---------- */
+  /* --- Barra inferior --- */
   #bottom{ display:flex; gap:2vmin; padding:2vmin 2.6vmin calc(2vmin + env(safe-area-inset-bottom)); border-top:1px solid var(--hair); }
   .navbtn{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.8vmin;
     padding:1.8vmin 1vmin; border-radius:2.2vmin; cursor:pointer; color:var(--txt); font-weight:700; font-size:3vmin; letter-spacing:.05em;
@@ -133,20 +131,15 @@
   .navbtn.dis{ opacity:.45; cursor:default; }
   .navbtn.home  .ico svg{ stroke:var(--amber); } .navbtn.home{ color:#8a6414; }
   .navbtn.disable .ico svg{ stroke:var(--cyan); } .navbtn.disable{ color:#0d6b7c; }
-  /* DESHABILITAR (feature 007): azul --accent, como pidio Erwin.
-     OJO - LA BARRA QUEDA CON TRES BOTONES EN LA FAMILIA DEL AZUL: este (accent),
-     TALLAS (accent) y APAGAR (cyan). Por eso el ICONO tiene que hacer el trabajo
-     de distinguirlos: candado abierto aqui, simbolo de power en APAGAR. Es la
-     mitigacion del choque de nombres que se aviso en la spec. */
+  /* DESHABILITAR comparte el tono azul con TALLAS; el icono de candado es lo que los distingue. */
   .navbtn.liberar .ico svg{ stroke:var(--accent); } .navbtn.liberar{ color:#0a5fbf; }
-  /* Estado PLATO LIBRE: tiene que CANTAR, porque es un estado en el que la
-     maquina no sujeta el plato. Relleno solido en vez de solo color de texto. */
+  /* Plato libre: relleno sólido para que destaque, porque el motor no sujeta el plato. */
   .navbtn.liberar.suelto{ background:rgba(10,132,255,.16); border-radius:2vmin; color:#08498f; }
   .navbtn.liberar.suelto .ico svg{ stroke:#08498f; }
   .navbtn.menu .ico svg,.navbtn.stats .ico svg{ stroke:#3a4a5e; }
   #btn-stats{ margin-left:auto; }
 
-  /* ---------- MODAL ---------- */
+  /* --- Modal --- */
   #modal{ position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; padding:4vmin;
     background:rgba(20,32,48,.28); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
   #modal.hidden{ display:none; }
@@ -162,8 +155,8 @@
   .mbtn.ghost{ background:var(--glass2); border:1px solid var(--stroke); color:var(--txt); }
   .mbtn.warn{ background:var(--amber); } .mbtn.sm{ font-size:3vmin; padding:1.6vmin 2.6vmin; }
 
-  /* Teclados numericos (META y AJUSTES): display + OK/Cancelar a la izquierda,
-     teclas a la derecha, para que quepan sin scroll en pantalla horizontal. */
+  /* Teclados numéricos: visor y botones a la izquierda, teclas a la derecha,
+     para que quepan sin desplazamiento en pantalla horizontal. */
   .kpwrap{ display:flex; flex-wrap:wrap; gap:3vmin; align-items:stretch; }
   .kpleft{ flex:1 1 34vmin; display:flex; flex-direction:column; justify-content:space-between; gap:2vmin; }
   .kpleft .foot{ padding:0; flex-direction:column; justify-content:flex-end; }
@@ -186,7 +179,7 @@
   .stat{ display:flex; justify-content:space-between; padding:2vmin 0; border-bottom:1px solid var(--hair); font-size:3.4vmin; }
   .stat:last-child{ border-bottom:none; } .stat .v{ font-weight:800; }
 
-  /* ---------- OVERLAY ---------- */
+  /* --- Aviso de conexión --- */
   #overlay{ position:fixed; inset:0; z-index:40; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4vmin;
     background:rgba(244,247,252,.62); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); transition:opacity .25s ease; }
   #overlay.hidden{ opacity:0; pointer-events:none; }
@@ -196,12 +189,10 @@
   #ovtext{ font-size:4.2vmin; font-weight:700; text-align:center; padding:0 6vmin; color:var(--txt); }
   #ovsub{ font-size:3vmin; color:var(--muted); text-align:center; padding:0 6vmin; margin-top:-1.6vmin; }
 
-  /* ---------- PARO DE EMERGENCIA (feature 010) ---------- */
-  /* A proposito NO es de pantalla completa: deja ver los lados y arriba la
-     pantalla de atras (pedido explicito de Erwin). Por eso no tiene un fondo
-     que cubra #app como #overlay/#modal - solo la tarjeta centrada. El
-     bloqueo de los controles de atras lo hace estop-lock via pointer-events,
-     no un backdrop visual. */
+  /* --- Paro de emergencia --- */
+  /* Tarjeta centrada sin fondo de pantalla completa, para que siga viéndose la
+     pantalla de detrás. Los controles de detrás se bloquean con estop-lock
+     (pointer-events), no con un fondo opaco. */
   body.estop-lock #app, body.estop-lock #sizes, body.estop-lock #manual, body.estop-lock #menu, body.estop-lock #settings, body.estop-lock #modal{ pointer-events:none; }
   #estop{ position:fixed; left:50%; top:16%; transform:translateX(-50%); z-index:10000;
     width:min(100vmin,86vw); display:flex; flex-direction:column; align-items:center; gap:2.6vmin;
@@ -215,7 +206,7 @@
     color:#fff; background:var(--accent); cursor:pointer; box-shadow:var(--hi); margin-top:1vmin; }
   #estop-reset:disabled{ opacity:.38; cursor:default; background:rgba(255,255,255,.25); }
 
-  /* ---------- PANTALLA DE TALLAS (feature 004) ---------- */
+  /* --- Pantalla TALLAS --- */
   .navbtn.sizes .ico svg{ stroke:var(--accent); } .navbtn.sizes{ color:#0a5fbf; }
   #sizes{ position:fixed; inset:0; z-index:20; display:grid; grid-template-rows:auto auto 1fr;
     background:linear-gradient(135deg,#f4f7fc,#e9eff8); }
@@ -244,12 +235,10 @@
     transition:transform .09s ease, filter .09s ease; }
   #sz-home:active:not(:disabled){ transform:scale(.975); filter:brightness(.96); }
   #sz-home:disabled{ cursor:default; color:var(--muted2); background:rgba(255,255,255,.40); text-shadow:none; }
-  /* EL CUADRO DE IMPRESION (2026-10-08, pedido de Erwin): las tallas se dibujan
-     como el screen real -- un marco de aluminio con la malla dentro y las 7
-     tallas en fila. Cada talla es una zona tocable de la malla.
-     Colores: AMBAR PARPADEANDO = el screen va hacia esa talla; VERDE = ya llego.
-     XS a la izquierda (lado del tope del home): si fisicamente es al reves,
-     cambiar SZ_XS_A_LA_DERECHA en el script, no el CSS. */
+  /* Las tallas se dibujan como el screen real: marco de aluminio con la malla
+     dentro y una zona tocable por talla. Ámbar parpadeante = en camino;
+     verde = posición alcanzada. El orden se invierte con SZ_XS_A_LA_DERECHA
+     en el script, no aquí. */
   #sz-frame{ width:min(150vmin,94vw); padding:2.6vmin; border-radius:2.2vmin;
     background:linear-gradient(180deg,#d5dce5 0%,#aab5c2 48%,#c6ced8 100%);
     box-shadow:var(--shadow), inset 0 .3vmin 0 rgba(255,255,255,.75), inset 0 -.4vmin 0 rgba(0,0,0,.18);
@@ -277,11 +266,9 @@
   #sz-current{ font-size:3vmin; font-weight:700; color:var(--muted); letter-spacing:.12em; display:flex; align-items:center; }
   #sz-current b{ color:var(--accent); font-size:5vmin; margin-left:1.8vmin; letter-spacing:.02em; }
 
-  /* ---------- PANTALLA MANUAL (feature 012) ---------- */
-  /* Calcada de #sizes (feature 004) letra por letra, con prefijo ma- para no
-     chocar con mn- (pantalla MENÚ) ni ag- (pantalla AJUSTES). */
-  /* PANTALLAS MENÚ (#menu) y AJUSTES (#settings): mismo esqueleto que #manual,
-     reusando estas reglas con los ids mn- y ag- en vez de duplicarlas. */
+  /* --- Pantallas MANUAL, MENÚ y AJUSTES --- */
+  /* Comparten el esqueleto de #sizes. Prefijos de id: ma- (MANUAL),
+     mn- (MENÚ) y ag- (AJUSTES), para que no colisionen entre sí. */
   #manual, #menu, #settings{ position:fixed; inset:0; z-index:20; display:grid; grid-template-rows:auto auto 1fr;
     background:linear-gradient(135deg,#f4f7fc,#e9eff8); }
   #manual.hidden, #menu.hidden, #settings.hidden{ display:none; }
@@ -321,11 +308,10 @@
 </style>
 </head>
 <body class="cursor-hidden">
-<!-- SPLASH DE ARRANQUE (feature 008). Es lo PRIMERO que pinta Chromium, y es la
-     MISMA imagen que muestra plymouth durante el arranque: asi el relevo entre
-     plymouth, cage y Chromium no se nota. Se quita cuando la maquina responde de
-     verdad, y NO vuelve a aparecer nunca mas (para las caidas posteriores ya
-     existe #overlay). -->
+<!-- Pantalla de arranque: misma imagen que muestra plymouth, para que el paso
+     de plymouth al navegador no se note. Se retira la primera vez que la
+     máquina responde y no vuelve a mostrarse; las desconexiones posteriores
+     las avisa #overlay. -->
 <div id="splash"><img src="splash.png" alt=""></div>
 <div id="bg"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span></div>
 
@@ -338,9 +324,8 @@
 
   <div id="statuswrap"><div id="status"><span class="sdot"></span><span id="statustext">—</span></div></div>
 
-  <!-- Chips de MODO y de los DOS HOMES (feature 005). Toda la fila se oculta en
-       modo SOLO CABEZA salvo el chip de modo: ahi el plato no participa y
-       ensenar su home solo confundiria. -->
+  <!-- Chips de modo y de los dos homes. En modo SOLO CABEZA el chip del plato
+       se oculta: el plato no participa y mostrar su home confundiría. -->
   <div id="chips">
     <span class="chip" id="chip-modo">—</span>
     <span class="chip" id="chip-head">—</span>
@@ -363,21 +348,15 @@
     <button class="navbtn menu" id="btn-menu"><span class="ico" id="ic-menu"></span><span data-i18n="nav_menu">MENÚ</span></button>
     <button class="navbtn home" id="btn-home"><span class="ico" id="ic-home"></span><span data-i18n="nav_home">HOME</span></button>
     <button class="navbtn sizes" id="btn-sizes"><span class="ico" id="ic-sizes"></span><span data-i18n="nav_sizes">TALLAS</span></button>
-    <!-- DESHABILITAR (feature 007): libera el motor del plato para girarlo a mano.
-         OCUPA EL SITIO DEL ANTIGUO BOTON APAGAR (2026-08-18). Dos motivos:
-         1) La barra estaba ajustada a mano para CINCO botones (ver la regla
-            #btn-stats{margin-left:auto}, que fija STATS al borde derecho). Con
-            seis el reparto se descuadraba y el boton no se veia en el kiosco.
-         2) APAGAR mandaba M84 y NO apaga la Pi: un operador podia pulsarlo
-            creyendo que apago la maquina y cortar corriente acto seguido. Era
-            una trampa documentada en la bitacora; quitarlo la elimina.
-         Erwin: "no lo ocupo el de apagar". -->
+    <!-- DESHABILITAR libera el motor del plato para girarlo a mano.
+         La barra está maquetada para cinco botones (#btn-stats fija STATS al
+         borde derecho); un sexto descuadra el reparto en la pantalla del kiosco. -->
     <button class="navbtn liberar" id="btn-liberar"><span class="ico" id="ic-liberar"></span><span id="lbl-liberar">DESHABILITAR</span></button>
     <button class="navbtn stats" id="btn-stats"><span class="ico" id="ic-stats"></span><span data-i18n="nav_stats">STATS</span></button>
   </footer>
 </div>
 
-<!-- PANTALLA DE TALLAS (feature 004): aparte de la del modo automatico -->
+<!-- Pantalla TALLAS -->
 <div id="sizes" class="hidden">
   <header id="sz-top">
     <button id="sz-back"><span data-i18n="tal_back">VOLVER</span></button>
@@ -392,8 +371,7 @@
   </main>
 </div>
 
-<!-- PANTALLA MANUAL (feature 012): los mismos movimientos del ciclo automatico,
-     disparados uno por uno. El orden de los botones ES el orden del ciclo. -->
+<!-- Pantalla MANUAL: los movimientos del ciclo automático, de uno en uno. -->
 <div id="manual" class="hidden">
   <header id="ma-top">
     <button id="ma-back"><span data-i18n="man_back">VOLVER</span></button>
@@ -404,10 +382,8 @@
   <main id="ma-body">
     <button id="ma-home" disabled><span data-i18n="man_home">HOME</span></button>
     <div id="ma-grid">
-      <!-- Orden pedido por Erwin (2026-09-18), agrupado por accion, no por paso
-           del ciclo: fila 1 marco (subir izq / bajar der), fila 2 stroke (ida
-           izq / vuelta der), fila 3 squeegee (subir izq / bajar der, mismo
-           patron que el marco). HOME e INDEX se quedan donde estaban. -->
+      <!-- Agrupados por eje, no por paso del ciclo: una fila para el marco,
+           otra para el stroke y otra para el squeegee (subir/ida a la izquierda). -->
       <button class="mabtn" id="ma-marco-arriba" disabled><span data-i18n="man_marco_up">MARCO ▲</span><span class="mreason"></span></button>
       <button class="mabtn" id="ma-marco-abajo" disabled><span data-i18n="man_marco_down">MARCO ▼</span><span class="mreason"></span></button>
       <button class="mabtn" id="ma-stroke-out" disabled><span data-i18n="man_stroke_out">STROKE IDA (vacío)</span><span class="mreason"></span></button>
@@ -419,8 +395,7 @@
   </main>
 </div>
 
-<!-- PANTALLA MENÚ: reemplaza el viejo modal de Ajustes. Solo dos entradas
-     (AJUSTES, MANUAL) más el idioma, que se mudó aquí desde ese modal. -->
+<!-- Pantalla MENÚ -->
 <div id="menu" class="hidden">
   <header id="mn-top">
     <button id="mn-back"><span data-i18n="men_back">VOLVER</span></button>
@@ -443,8 +418,7 @@
   </main>
 </div>
 
-<!-- PANTALLA AJUSTES: velocidad (0-99) y posición (mm) de cabeza e index.
-     Reemplaza el bloque de ciclo del viejo modal de Ajustes. -->
+<!-- Pantalla AJUSTES: velocidad (escala 0-99) y posiciones (mm). -->
 <div id="settings" class="hidden">
   <header id="ag-top">
     <button id="ag-back"><span data-i18n="ag_back">VOLVER</span></button>
@@ -467,10 +441,8 @@
 <div id="modal" class="hidden"><div class="card" id="modalcard"></div></div>
 <div id="overlay"><div class="spinner"></div><div id="ovtext">Conectando…</div><div id="ovsub"></div></div>
 
-<!-- PARO DE EMERGENCIA (feature 010): se muestra/oculta segun _ESTOP.active
-     (bandera propia en Klipper, NO el estado de shutdown de Klippy - el
-     corte real de motores ya lo hace el NC en hardware, esto es solo aviso).
-     A proposito deja ver los lados y arriba: ver CSS #estop. -->
+<!-- Paro de emergencia: solo aviso en pantalla. El corte de motores lo hace
+     el contacto NC en hardware. -->
 <div id="estop" class="hidden">
   <span class="eico" id="estop-ico"></span>
   <h2 data-i18n="es_title">PARO DE EMERGENCIA ACTIVADO</h2>
@@ -482,11 +454,9 @@
 (function(){
   "use strict";
 
-  // ----- cursor del mouse (feature 009) -----
-  // Oculto desde el primer frame (clase ya puesta en <body>). Los toques
-  // tactiles llegan con pointerType "touch" y nunca disparan esto; solo un
-  // mouse fisico real ("mouse") lo muestra, para poder verlo en reparaciones,
-  // y se re-oculta solo tras CURSOR_HIDE_MS sin moverlo.
+  // --- Cursor del ratón ---
+  // Solo un ratón físico lo muestra (útil en mantenimiento); los toques no.
+  // Se vuelve a ocultar tras CURSOR_HIDE_MS sin movimiento.
   var CURSOR_HIDE_MS = 3000;
   var cursorHideTimer = null;
   function showCursor(){
@@ -505,34 +475,25 @@
     power:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>',
     stats:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
     sizes:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="1.6"/><path d="M7 7v3.4M11 7v3.4M15 7v3.4M19 7v3.4"/></svg>',
-    // Candado ABIERTO = plato libre. Deliberadamente distinto del simbolo de
-    // power de APAGAR: los dos botones son azulados y contiguos, asi que la
-    // forma del icono es lo que evita confundirlos.
+    // Candado abierto: plato libre.
     libre:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.7"/></svg>',
-    // Candado CERRADO = plato sujetando posicion.
+    // Candado cerrado: el motor sujeta el plato.
     sujeto:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
-    // Triangulo de aviso para el overlay de PARO DE EMERGENCIA (feature 010).
     estop:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 21h20Z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg>'
   };
   var WS_URL=(location.protocol==="https:"?"wss://":"ws://")+location.host+"/websocket";
-  // OJO: NO suscribir "manual_stepper screen": esta version de Klipper no publica
-  // ese objeto en el status (comprobado), y pedirlo hace fallar la suscripcion.
-  // Se anade "gcode_macro _INDEX" (feature 005). MISMO AVISO que para el screen:
-  // NO suscribir "manual_stepper index" - esta version de Klipper no publica los
-  // objetos manual_stepper y pedirlo hace fallar la suscripcion ENTERA.
-  // Se anade "gcode_macro _MARCO" (feature 012): es un gcode_macro normal, NO
-  // un manual_stepper, asi que suscribirlo es seguro (mismo motivo por el que
-  // _INDEX y _SCREEN ya se suscriben, y el mismo por el que NO se suscribe
-  // "manual_stepper marco"). Y "gcode_move" para leer gcode_position.x, el
-  // sistema de coordenadas en el que estan escritos los G1 X del ciclo -- es
-  // el mismo dato que usan las guardas de las macros MANUAL_STROKE_*.
-  // "gcode_button paro_emergencia" se suscribe aparte de _ESTOP a proposito:
-  // Klipper escribe last_state en el callback del boton ANTES de renderizar el
-  // press_gcode y ANTES de pedir el mutex, asi que este objeto refleja el boton
-  // en <=250ms aunque el ciclo tenga el mutex tomado varios segundos.
+  // Objetos de Klipper a los que se suscribe la interfaz.
+  // No incluir ningún "manual_stepper ...": esta versión de Klipper no los
+  // publica y pedir uno hace fallar la suscripción entera. El estado de
+  // screen, plato y marco se lee de sus gcode_macro.
+  // gcode_move aporta gcode_position.x, el mismo sistema de coordenadas que
+  // usan los G1 X del ciclo y las guardas de las macros MANUAL_STROKE_*.
+  // "gcode_button paro_emergencia" se suscribe aparte de _ESTOP porque Klipper
+  // actualiza last_state antes de tomar el mutex de gcode: refleja el botón en
+  // <=250 ms aunque el ciclo tenga el mutex ocupado varios segundos.
   var OBJS={ "toolhead":["homed_axes"], "gcode_macro _CYCLE_STATE":null, "save_variables":null, "gcode_macro _SCREEN":null, "gcode_macro _INDEX":null, "idle_timeout":["state"], "gcode_macro _ESTOP":null, "gcode_button paro_emergencia":null, "gcode_macro _MARCO":null, "gcode_move":["gcode_position"] };
 
-  // ----- i18n (ES/EN) -----
+  // --- Textos (ES/EN) ---
   var lang=(function(){ try{ var s=localStorage.getItem("ui_lang"); return (s==="en"||s==="es")?s:"es"; }catch(e){ return "es"; } })();
   var I18N={
     es:{
@@ -583,7 +544,7 @@
       es_sub:"Motores cortados por el botón físico. Suéltalo para continuar — habrá que homear de nuevo.",
       es_sub_sd:"Motores detenidos. Gira el hongo para soltarlo y pulsa RESET: se reinicia el firmware y hay que volver a hacer HOME. El contador de piezas vuelve a 0.",
       es_reset:"RESET",
-      // ----- MODO MANUAL (feature 012) -----
+      // Modo manual
       stt_manual_marco:"El marco quedó ABAJO (modo manual) — súbelo o pulsa HOME antes de arrancar",
       stt_manual_squeegee:"El squeegee quedó ABAJO (modo manual) — súbelo o pulsa HOME antes de arrancar",
       man_title:"MANUAL", man_back:"VOLVER", man_home:"HOME",
@@ -653,7 +614,7 @@
       es_sub:"Motors cut by the physical button. Release it to continue — homing will be required again.",
       es_sub_sd:"Motors stopped. Twist the mushroom button to release it and press RESET: the firmware restarts and HOME is required again. The part counter goes back to 0.",
       es_reset:"RESET",
-      // ----- MANUAL MODE (feature 012) -----
+      // Modo manual
       stt_manual_marco:"The frame was left DOWN (manual mode) — raise it or press HOME before starting",
       stt_manual_squeegee:"The squeegee was left DOWN (manual mode) — raise it or press HOME before starting",
       man_title:"MANUAL", man_back:"BACK", man_home:"HOME",
@@ -684,7 +645,7 @@
            screenHomed:0, screenTalla:0, screenNames:[],
            indexHomed:0, indexStation:0, indexEnergizado:0, indexMoving:0, busy:false,
            estopActive:0, estopFisico:0, estopBoton:0, estopLatch:0,
-           // feature 012: 0 = DESCONOCIDA, 1 = ARRIBA, 2 = ABAJO (ver _MARCO.pos)
+           // marcoPos (de _MARCO.pos): 0 = desconocida, 1 = arriba, 2 = abajo
            marcoHomed:0, marcoPos:0, squeegeeX:null };
   var uiTarget=0;
 
@@ -707,9 +668,9 @@
   $("ic-menu").innerHTML=ICON.menu; $("ic-home").innerHTML=ICON.home; $("ic-stats").innerHTML=ICON.stats;
   $("ic-sizes").innerHTML=ICON.sizes; $("estop-ico").innerHTML=ICON.estop;
 
-  // cb (opcional): se llama con true/false cuando Moonraker RESPONDE, que para
-  // printer.gcode.script es cuando el comando TERMINA (o falla). Si se cae el
-  // websocket se llama con false, para que nadie se quede esperando.
+  // cb (opcional) recibe true/false cuando Moonraker responde; para
+  // printer.gcode.script eso ocurre cuando el comando termina o falla.
+  // Si se cae el websocket se invoca con false para no dejar esperas colgadas.
   var rpcCbs={};
   function rpc(method,params,cb){
     if(ws&&ws.readyState===1){ var id=rid++; if(cb) rpcCbs[id]=cb;
@@ -721,40 +682,30 @@
   function isHomed(){ return st.homed.indexOf("x")>=0 && st.homed.indexOf("y")>=0; }
   function isRunning(){ return Number(st.running)===1; }
 
-  // ----- modo de trabajo y los DOS homes (feature 005) -----
-  // El modo vive en save_variables (persiste entre reinicios), igual que en
-  // Klipper: SET_CYCLE MODO=CARRUSEL|CABEZA.
+  // --- Modo de trabajo y homes ---
+  // El modo persiste en save_variables (SET_CYCLE MODO=CARRUSEL|CABEZA).
   function isCarrusel(){ return num(st.vars.modo_carrusel,0)===1; }
   function isSimular(){ return num(st.vars.simular_impresion,0)===1; }
   function isIndexHomed(){ return Number(st.indexHomed)===1; }
   function isIndexEnergizado(){ return Number(st.indexEnergizado)===1; }
 
-  // ESTA ES LA REGLA DE START, Y TIENE QUE SER LA MISMA QUE LA DE LA MACRO.
-  // En Klipper, START exige:
-  //   - home de la cabeza (x e y)  ... salvo en SIMULAR, donde no mueve la cabeza
-  //   - home del plato             ... siempre, en modo carrusel
-  // Si estas dos condiciones se separan de las de la macro, el boton miente:
-  // o se ve habilitado y la macro aborta, o al contrario. Mantenerlas juntas.
-  // OJO - ESTO REPLICA LA MACRO LINEA POR LINEA. En Klipper START hace:
-  //   if sim == 0 and (x o y sin home)        -> error   => head hace falta si NO hay simulacion
-  //   if sim == 1 and modo == CABEZA          -> error   => combinacion invalida
-  //   if modo == CARRUSEL and plato sin home  -> error
-  // La primera version de esto puso needsHead = !(carrusel && sim), que NO es lo
-  // mismo: con SIMULAR=1 en modo SOLO CABEZA el boton se veia habilitado (si la
-  // cabeza estaba homeada) y la macro lo rechazaba. Boton que miente.
+  // Reglas de START: deben coincidir con las guardas de la macro START, o el
+  // botón se mostrará habilitado cuando la macro va a abortar (o al revés).
+  // La macro rechaza:
+  //   - simulación desactivada y cabeza (x, y) sin home
+  //   - simulación activada en modo SOLO CABEZA
+  //   - modo CARRUSEL con el plato sin home
   function needsHead(){ return !isSimular(); }
   function simInvalid(){ return isSimular() && !isCarrusel(); }
 
-  // ----- posicion del marco y del squeegee (feature 012) -----
-  // marcoPos: 0 = DESCONOCIDA, 1 = ARRIBA, 2 = ABAJO. Igual que en la macro:
-  // solo el 2 (certeza de abajo) bloquea START/INDEX. DESCONOCIDA deja pasar,
-  // o una maquina con MARCO=NO y el cuadro bajado a mano quedaria bloqueada
-  // tras cada reinicio (marcoPos vuelve a 0), sin forma de desbloquearla.
+  // --- Posición del marco y del squeegee ---
+  // Igual que en la macro, solo "abajo" (2) bloquea START/INDEX. "Desconocida"
+  // (0) no bloquea: tras cada reinicio marcoPos vuelve a 0, y una máquina con
+  // MARCO=NO y el cuadro bajado a mano quedaría bloqueada sin forma de salir.
   function marcoAbajo(){ return Number(st.marcoPos)===2; }
   function marcoArriba(){ return Number(st.marcoPos)===1; }
-  // Cercania relativa, no igualdad con squeegee_up: replica EXACTAMENTE la
-  // guarda de la macro (ver macros_ciclo.cfg / macros_manual.cfg) para que
-  // el boton no mienta.
+  // "Abajo" = más cerca de squeegee_down que de squeegee_up (no igualdad
+  // exacta). Replica la guarda de las macros del ciclo y del modo manual.
   function squeegeeAbajo(){
     if(st.squeegeeX===null) return false;
     var su=num(st.vars.squeegee_up,10), sd=num(st.vars.squeegee_down,90);
@@ -762,9 +713,8 @@
     var x=st.squeegeeX;
     return Math.abs(x-sd) < Math.abs(x-su);
   }
-  // ESTA ES LA REGLA DE START, Y TIENE QUE SER LA MISMA QUE LA DE LA MACRO
-  // (feature 012, se suma a la regla ya escrita arriba): la maquina no puede
-  // arrancar el automatico si quedo en posicion de manual.
+  // Regla adicional de START, también replicada de la macro: no se arranca el
+  // automático si el marco o el squeegee quedaron abajo tras el modo manual.
   function manualBloqueaStart(){ return marcoAbajo() || (isHomed() && squeegeeAbajo()); }
   function canStart(){
     if(simInvalid()) return false;
@@ -773,7 +723,7 @@
     if(!isSimular() && manualBloqueaStart()) return false;
     return true;
   }
-  // Devuelve que falta, para poder decirlo en concreto en vez de "sin referencia".
+  // Lista qué homes faltan, para indicarlo en concreto al operador.
   function missingHomes(){
     var m=[];
     if(needsHead() && !isHomed()) m.push("head");
@@ -791,38 +741,32 @@
     var ready=conn.connected&&conn.klippy;
     quitarSplash(ready);
 
-    // ----- PARO DE EMERGENCIA (feature 010) -----
-    // El boton fisico dispara action_emergency_stop() -> Klipper entra en
-    // `shutdown`. Ese estado ES la senal principal del paro; llega por
-    // notify_klippy_shutdown en milisegundos, sin pasar por el mutex del gcode.
-    // estopActive/estopLatch se conservan para el camino por gcode
-    // (PARO_EMERGENCIA lanzada a mano), que no provoca shutdown.
-    // Bloquea el resto de la pantalla (pointer-events, no un backdrop visual)
-    // para que nadie pulse HOME/START creyendo que la maquina sigue viva.
+    // Paro de emergencia. El botón físico provoca action_emergency_stop() y
+    // Klipper pasa a "shutdown": esa es la señal principal, y llega por
+    // notify_klippy_shutdown sin esperar al mutex de gcode. estopActive y
+    // estopLatch cubren PARO_EMERGENCIA lanzada por gcode, que no provoca
+    // shutdown. Se bloquea el resto de la pantalla para que nadie pulse
+    // HOME/START creyendo que la máquina sigue operativa.
     var estopSd=(conn.klippyState==="shutdown");
     var estopOn=estopSd||Number(st.estopActive)===1||Number(st.estopLatch)===1;
     document.body.classList.toggle("estop-lock", estopOn);
     estopEl.classList.toggle("hidden", !estopOn);
-    // El texto cambia segun el camino: en shutdown hay que avisar que RESET
-    // reinicia el firmware y que primero hay que girar el hongo para soltarlo.
+    // En shutdown el texto explica que hay que soltar el hongo y que RESET
+    // reinicia el firmware.
     estopSubEl.textContent = estopSd ? t("es_sub_sd") : t("es_sub");
-    // En shutdown RESET siempre se habilita: si el hongo sigue presionado, el
-    // firmware vuelve a entrar en shutdown al arrancar y la tarjeta reaparece.
-    // Es autocorrectivo y mas honesto que adivinar el estado del boton, que
-    // durante el shutdown ya no se actualiza.
+    // En shutdown RESET siempre está habilitado: el estado del botón deja de
+    // actualizarse, y si el hongo sigue presionado el firmware vuelve a
+    // shutdown al arrancar y el aviso reaparece.
     estopResetBtn.disabled = estopSd ? false
       : (Number(st.estopBoton)===1 || Number(st.estopActive)!==1);
-    // NO se corta el resto de render() aqui a proposito: el M84 de
-    // PARO_EMERGENCIA ya invalido running/homed, asi que dejar que el resto
-    // de la pantalla se actualice normalmente muestra el estado REAL de
-    // atras (bloqueado por estop-lock, pero no con datos viejos/enganosos).
+    // render() continúa a propósito: el M84 de PARO_EMERGENCIA ya invalidó
+    // running/homed, y así la pantalla bloqueada muestra el estado real.
     if(!conn.connected){ connText.textContent=t("conn_offline"); connEl.className="pill bad"; }
     else if(!conn.klippy){ connText.textContent=conn.klippyState?t("conn_klipper")+conn.klippyState:t("conn_notready"); connEl.className="pill bad"; }
     else { connText.textContent=t("conn_online"); connEl.className="pill ok"; }
 
     if(!conn.connected){ overlay.className=""; ovText.textContent=t("ov_reconnecting"); ovSub.textContent=t("ov_searching"); }
-    // En shutdown NO se muestra el overlay generico: ese estado ya lo explica
-    // la tarjeta de paro de emergencia, y dos avisos superpuestos confunden.
+    // En shutdown se omite el aviso genérico: ya lo explica la tarjeta de paro.
     else if(estopSd){ overlay.className="hidden"; }
     else if(!conn.klippy){ overlay.className="err"; ovText.textContent=t("ov_knotready"); ovSub.textContent=t("ov_restarting"); }
     else overlay.className="hidden";
@@ -839,8 +783,6 @@
     else if(!isSimular() && marcoAbajo()){ scls="warn"; stxt=t("stt_manual_marco"); }
     else if(!isSimular() && isHomed() && squeegeeAbajo()){ scls="warn"; stxt=t("stt_manual_squeegee"); }
     else if(falta.length){ scls="warn";
-      // Se dice CUAL de los dos homes falta. Antes decia solo "sin referencia",
-      // y con dos ejes homeables eso deja al operador adivinando.
       if(falta.length===2) stxt=t("stt_nohome_both");
       else if(falta[0]==="index") stxt=t("stt_nohome_index");
       else stxt=t("stt_noref");
@@ -854,8 +796,7 @@
 
     content.classList.remove("running");
     var canBig=ready&&!busy;
-    // canStart() y no isHomed(): en modo carrusel hacen falta LOS DOS homes.
-    // El disabled es de verdad (atributo), no solo estilo.
+    // Se usa canStart() y no isHomed(): en modo carrusel hacen falta los dos homes.
     if(isRunning()){ bigbtn.className="b-stop"; bigIco.innerHTML=ICON.stop; bigLbl.textContent="STOP"; bigbtn.disabled=!canBig; content.classList.add("running"); }
     else if(canStart()){ bigbtn.className="b-start"; bigIco.innerHTML=ICON.start; bigLbl.textContent="START"; bigbtn.disabled=!canBig; }
     else { bigbtn.className=""; bigIco.innerHTML=ICON.start; bigLbl.textContent="START"; bigbtn.disabled=true; }
@@ -871,31 +812,27 @@
     renderManual();
   }
 
-  // ----- boton DESHABILITAR / ENERGIZAR (feature 007) -----
-  // El texto y el icono cambian segun _INDEX.energizado, que Klipper mantiene en
-  // el embudo _INDEX_ENERGIZAR / _INDEX_LIBERAR. NO se puede leer el enable real
-  // del motor: esta version de Klipper no publica los objetos manual_stepper.
+  // --- Botón DESHABILITAR / ENERGIZAR ---
+  // Refleja _INDEX.energizado, que mantienen _INDEX_ENERGIZAR/_INDEX_LIBERAR.
+  // El enable real del motor no es legible: los manual_stepper no se publican.
   function renderLiberar(ready){
     var b=$("btn-liberar"); if(!b) return;
     var suelto=!isIndexEnergizado();
     $("lbl-liberar").textContent = suelto ? t("nav_energizar") : t("nav_liberar");
     $("ic-liberar").innerHTML    = suelto ? ICON.libre : ICON.sujeto;
     if(suelto) b.classList.add("suelto"); else b.classList.remove("suelto");
-    // Deshabilitado DE VERDAD con el ciclo en marcha: mismo criterio que los
-    // demas botones de la barra. La macro lleva ademas su propia guarda, porque
-    // esta pantalla puede estar desactualizada y la macro no.
+    // Deshabilitado con el ciclo en marcha. La macro tiene su propia guarda
+    // porque esta pantalla puede estar desactualizada.
     setNav("btn-liberar", ready&&!isRunning());
   }
 
-  // ----- chips de modo y homes (feature 005) -----
+  // --- Chips de modo y homes ---
   function chip(id,txt,cls){ var el=$(id); if(!el) return;
     el.textContent=txt; el.className="chip"+(cls?(" "+cls):""); }
   function chipHide(id){ var el=$(id); if(el) el.className="chip hidden"; }
-  // Quita el splash la PRIMERA vez que la maquina responde, y no lo vuelve a
-  // poner: para las caidas posteriores ya existe #overlay, que es el que debe
-  // avisar. Se usa una BANDERA y no se comprueba el elemento porque el fundido
-  // tarda 450 ms: sin bandera, un parpadeo de conexion durante ese rato lo
-  // relanzaria a medias.
+  // Retira la pantalla de arranque la primera vez que la máquina responde.
+  // Se usa una bandera en vez de comprobar el elemento porque el fundido dura
+  // 450 ms y un corte de conexión en ese intervalo lo relanzaría a medias.
   var splashQuitado=false;
   function quitarSplash(ready){
     if(splashQuitado) return;
@@ -912,18 +849,15 @@
 
     if(!ready){ chipHide("chip-head"); chipHide("chip-index"); chipHide("chip-sim"); return; }
 
-    // Home de la cabeza: en simulacion NO se exige, asi que se muestra como
-    // informativo y no como pendiente - si no, el operador ve un aviso naranja
-    // que no le impide nada y aprende a ignorar los avisos.
+    // En simulación el home de la cabeza no se exige: se muestra como
+    // informativo, no como aviso, para no habituar al operador a ignorar avisos.
     if(needsHead()) chip("chip-head", isHomed()?t("chip_head_ok"):t("chip_head_no"), isHomed()?"ok":"warn");
     else chip("chip-head", t("chip_head_na"), "");
 
-    // El plato solo se ensena si participa.
     if(carr){
       var ih=isIndexHomed();
-      // Durante un avance _INDEX_AVANZAR baja homed a 0 a proposito; "girando"
-      // solo se muestra si ademas Klipper esta ejecutando (st.busy), para que un
-      // giro abortado no deje el chip colgado en "girando".
+      // _INDEX_AVANZAR pone homed a 0 mientras gira. "Girando" exige además
+      // st.busy para que un giro abortado no deje el chip en ese estado.
       var girando=!ih&&Number(st.indexMoving)>0&&st.busy;
       if(ih) chip("chip-index", t("chip_index_ok")(st.indexStation), "ok");
       else if(girando) chip("chip-index", t("chip_index_moving")(st.indexMoving), "info");
@@ -933,18 +867,15 @@
     if(isSimular()) chip("chip-sim", t("chip_sim"), "sim"); else chipHide("chip-sim");
   }
 
-  // ----- pantalla de TALLAS (feature 004) -----
-  // Los 7 botones se generan desde los nombres que publica _SCREEN, para que
-  // la lista de tallas tenga UNA sola fuente de verdad (la macro de Klipper).
-  //
-  // Se dibujan como el CUADRO DE IMPRESION (2026-10-08). Estado de cada zona:
-  //   szPending = talla pedida que el screen TODAVIA esta recorriendo -> ambar
-  //               parpadeando. Se limpia cuando SELECCIONAR_TALLA TERMINA (la
-  //               respuesta de Moonraker llega al acabar la macro, tras su M400),
-  //               haya llegado bien o haya fallado.
-  //   st.screenTalla = talla en la que el screen YA esta -> verde.
-  // Mientras hay un movimiento o un home en curso no se acepta otro toque: el
-  // 2026-10-08 se vio que un segundo toque encola un segundo movimiento.
+  // --- Pantalla TALLAS ---
+  // Los botones se generan desde los nombres que publica _SCREEN: la macro es
+  // la única fuente de la lista de tallas.
+  //   szPending      = talla pedida en recorrido (ámbar). Se limpia cuando
+  //                    SELECCIONAR_TALLA termina (Moonraker responde tras su
+  //                    M400), con éxito o con error.
+  //   st.screenTalla = talla alcanzada (verde).
+  // Con un movimiento o un home en curso se ignoran los toques: cada toque
+  // extra encolaría otro movimiento.
   var SZ_XS_A_LA_DERECHA=false;   // true si el tope del home queda a la derecha del operador
   var szPending=0, szHoming=false;
   function buildSizeGrid(){
@@ -970,10 +901,9 @@
     var ready=conn.connected&&conn.klippy;
     var homed=Number(st.screenHomed)===1;
     var running=isRunning();
-    var can=ready&&!running&&!busy;          // se puede accionar algo
-    // El indexado de tallas es INDEPENDIENTE de la cabeza: el UNICO requisito es
-    // el home del screen. El home de la maquina NO se exige. Si esta hecho, la
-    // macro sube el squeegee como cortesia; si no, avisa y mueve igual.
+    var can=ready&&!running&&!busy;
+    // Solo se exige el home del screen, no el de la cabeza. Con la cabeza
+    // homeada la macro sube antes el squeegee; sin él, avisa y mueve igual.
     var machineHomed=isHomed();
     var cls="warn", txt=t("tal_nohome");
     if(!ready){ txt=t("tal_waitconn"); }
@@ -986,11 +916,9 @@
     var moving=szHoming||szPending>0;
     szHomeBtn.disabled=!can||moving;
     szHomeLbl.textContent=szHoming?t("tal_homing"):t("tal_home");
-    // Cuadro en GRIS si no se puede elegir talla por una razon que el operador
-    // tiene que resolver (sin conexion, sin home, ciclo en marcha). Durante un
-    // movimiento NO se pone gris: ahi se ve la talla parpadeando.
+    // Cuadro en gris cuando el operador debe resolver algo (sin conexión, sin
+    // home, ciclo en marcha). Durante un movimiento no: se ve la talla parpadear.
     if(ready&&homed&&!running&&!szHoming) szFrame.classList.remove("off"); else szFrame.classList.add("off");
-    // sin home DEL SCREEN los botones van deshabilitados DE VERDAD (no solo el estilo)
     var btns=szGrid.querySelectorAll(".szbtn"), n=Number(st.screenTalla)||0;
     for(var i=0;i<btns.length;i++){
       btns[i].disabled=!(can&&homed)||moving;
@@ -1003,9 +931,9 @@
   function openSizes(){ szView.classList.remove("hidden"); renderSizes(); }
   function closeSizes(){ szView.classList.add("hidden"); }
 
-  // ----- pantalla MANUAL (feature 012) -----
-  // Un <button disabled> NO dispara click, asi que "el motivo del bloqueo" NO
-  // puede depender de tocar el boton: se pinta SIEMPRE debajo, en .mreason.
+  // --- Pantalla MANUAL ---
+  // Un <button disabled> no dispara click, así que el motivo del bloqueo se
+  // muestra siempre bajo el botón (.mreason) en lugar de al tocarlo.
   function maReason(id,txt){ var el=document.querySelector("#"+id+" .mreason"); if(el) el.textContent=txt||""; }
   function renderManual(){
     if(!maView||maView.classList.contains("hidden")) return;
@@ -1024,24 +952,22 @@
     maHomeBtn.disabled=!can;
 
     var canMove=can&&homedXY;
-    // Igual que en HOME_OP: si el marco tiene home, MARCO_ABAJO/ARRIBA valen.
+    // Mismo criterio que HOME_OP: con el marco homeado, MARCO_ABAJO/ARRIBA son válidos.
     var marcoOk=marcoHomedOk();
     setBtn("ma-marco-abajo", canMove&&marcoOk, canMove?(marcoOk?"":t("man_r_marco_home")):"");
     setBtn("ma-marco-arriba", canMove&&marcoOk, canMove?(marcoOk?"":t("man_r_marco_home")):"");
-    // SQUEEGEE ABAJO: la MISMA condicion que la macro (MANUAL_SQUEEGEE_DOWN),
-    // que exige pos==ABAJO Y homed==1 (MARCO_HOME_ABAJO deja pos=2 con
-    // homed=0, y ahi tampoco hay que dejar bajar el squeegee).
+    // Misma condición que MANUAL_SQUEEGEE_DOWN: marco abajo y homeado.
+    // MARCO_HOME_ABAJO deja pos=2 con homed=0, y ahí tampoco debe bajar.
     var puedeBajarSq = canMove && marcoAbajo() && marcoHomedOk();
     var rSq = "";
     if(canMove && !(marcoAbajo()&&marcoHomedOk())) rSq = marcoArriba()?t("man_r_marco_arriba"):t("man_r_marco_desc");
     setBtn("ma-squeegee-down", puedeBajarSq, rSq);
     setBtn("ma-squeegee-up", canMove, "");
-    // STROKE: bloqueado si el squeegee esta abajo y el marco no esta abajo.
+    // Stroke bloqueado con el squeegee abajo si el marco no está abajo (misma guarda que la macro).
     var strokeBloq = homedXY && squeegeeAbajo() && !marcoAbajo();
     var rStroke = strokeBloq ? t("man_r_stroke") : "";
     setBtn("ma-stroke-out", canMove && !strokeBloq, rStroke);
     setBtn("ma-stroke-in", canMove && !strokeBloq, rStroke);
-    // INDEX: solo en modo CARRUSEL con home del plato, y con el marco NO abajo.
     var puedeIndex = canMove && isCarrusel() && isIndexHomed() && !marcoAbajo();
     var rIndex = "";
     if(canMove){
@@ -1052,21 +978,18 @@
     setBtn("ma-index", puedeIndex, rIndex);
   }
   function setBtn(id,enabled,reason){ var b=$(id); if(!b) return; b.disabled=!enabled; maReason(id,reason); }
-  // Home valido para mover el marco a mano: igual criterio que _MARCO.homed.
   function marcoHomedOk(){ return Number(st.marcoHomed)===1; }
   function openManual(){ maView.classList.remove("hidden"); renderManual(); }
   function closeManual(){ maView.classList.add("hidden"); }
 
-  // ----- pantalla MENÚ -----
-  // Reemplaza al viejo modal de Ajustes: aquí solo viven las dos entradas
-  // (AJUSTES, MANUAL) y el idioma, que se mudó desde ese modal.
+  // --- Pantalla MENÚ ---
   function renderMenuScreen(){
     mnView.querySelectorAll("#langtog2 button").forEach(function(b){
       b.classList.toggle("on", b.getAttribute("data-l")===lang);
     });
-    // Espera del stroke = espera_derecha (0 IZQUIERDA: embarre con el giro /
-    // 1 DERECHA: espera en Y0 durante el giro, embarre después). NO es start_side
-    // (ese invierte el sentido del stroke). Bloqueado con el ciclo corriendo.
+    // "Espera del stroke" es espera_derecha: 0 IZQUIERDA = embarre durante el
+    // giro; 1 DERECHA = espera en Y0 durante el giro y embarra después.
+    // No confundir con start_side, que invierte el sentido del stroke.
     var side=num((st.vars||{}).espera_derecha,0);
     var tog=$("sidetog");
     tog.classList.toggle("dis", isRunning());
@@ -1077,14 +1000,10 @@
   function openMenuScreen(){ mnView.classList.remove("hidden"); renderMenuScreen(); }
   function closeMenuScreen(){ mnView.classList.add("hidden"); }
 
-  // ----- pantalla AJUSTES -----
-  // Velocidad en escala 0-99 (99 = velocidad máxima real de los motores,
-  // MMPERMIN_MAX) y posición igual que siempre, en mm. Conversión lineal.
-  // 7000 -> 14000 el 2026-09-25 (Erwin): 99 se quedaba corto (el stroke venía
-  // de 7500). 14000 -> 18000 el 2026-10-14 (feature 016, Erwin): mas rango
-  // util en 1-99. 18000 -> 21000 (feature 016, mismo dia, Erwin pidio mas).
-  // 21000 mm/min = 350 mm/s = max_velocity de Klipper (printer.cfg):
-  // es el techo; subirlo mas exige subir tambien max_velocity.
+  // --- Pantalla AJUSTES ---
+  // Velocidad en escala lineal 0-99, donde 99 = MMPERMIN_MAX; posiciones en mm.
+  // MMPERMIN_MAX = 21000 mm/min = 350 mm/s, el max_velocity de printer.cfg:
+  // subirlo exige subir también max_velocity, o Klipper recortará la velocidad.
   var MMPERMIN_MAX=21000, PCT_MAX=99;
   function mmToPct(mm){ return Math.round(num(mm,MMPERMIN_MAX)/MMPERMIN_MAX*PCT_MAX); }
   function pctToMm(pct){ return Math.round(num(pct,PCT_MAX)/PCT_MAX*MMPERMIN_MAX); }
@@ -1135,28 +1054,22 @@
 
   bigbtn.onclick=function(){ if(bigbtn.disabled) return; if(isRunning()) run("STOP"); else run("START CYCLES="+num(uiTarget,0)); flashBusy(); };
   $("btn-home").onclick=function(){ if(!$("btn-home").classList.contains("dis")){ run("HOME_OP"); flashBusy(); } };
-  // Un solo comando para los dos sentidos: INDEX_TOGGLE decide en Klipper, que es
-  // quien conoce el estado real. Si decidiera la UI, una pantalla desactualizada
-  // mandaria el comando contrario al que hace falta.
+  // INDEX_TOGGLE decide en Klipper, que conoce el estado real; si decidiera la
+  // interfaz, una pantalla desactualizada enviaría el comando contrario.
   $("btn-liberar").onclick=function(){ if(!$("btn-liberar").classList.contains("dis")){ run("INDEX_TOGGLE"); flashBusy(); } };
-  // El boton APAGAR se elimino el 2026-08-18 (lo ocupa DESHABILITAR). Mandaba M84.
-  // Si alguien lo repone, tiene que volver a anadir TAMBIEN el $("ic-disable") de
-  // arriba y su setNav: una referencia a un elemento que no existe tira toda la
-  // pantalla con un error de null, no solo ese boton.
   $("btn-menu").onclick=function(){ if(!$("btn-menu").classList.contains("dis")) openMenuScreen(); };
   $("btn-stats").onclick=function(){ if(!$("btn-stats").classList.contains("dis")) openStats(); };
   $("btn-sizes").onclick=function(){ if(!$("btn-sizes").classList.contains("dis")) openSizes(); };
   $("sz-back").onclick=closeSizes;
-  // szHoming hasta que SCREEN_HOME TERMINA: su pausa de 2 s antes de moverse
-  // hacia pensar que no habia respondido y se pulsaba dos veces (2026-10-08).
+  // szHoming se mantiene hasta que SCREEN_HOME termina: la macro espera 2 s
+  // antes de moverse y, sin indicación, el operador pulsaría dos veces.
   szHomeBtn.onclick=function(){ if(szHomeBtn.disabled) return; szHoming=true; render();
     run("SCREEN_HOME", function(){ szHoming=false; render(); }); };
 
-  // ----- pantalla MANUAL (feature 012) -----
+  // --- Pantalla MANUAL ---
   $("ma-back").onclick=closeManual;
   maHomeBtn.onclick=function(){ if(maHomeBtn.disabled) return; run("HOME_OP"); flashBusy(); };
   function wireMa(id,cmd){ var b=$(id); if(!b) return; b.onclick=function(){ if(b.disabled) return; run(cmd); flashBusy(); }; }
-  // Los botones llaman EXACTAMENTE a las macros del guion, mismo orden 1..7.
   wireMa("ma-marco-abajo",    "MARCO_ABAJO");
   wireMa("ma-stroke-out",     "MANUAL_STROKE_OUT");
   wireMa("ma-squeegee-down",  "MANUAL_SQUEEGEE_DOWN");
@@ -1165,7 +1078,7 @@
   wireMa("ma-marco-arriba",   "MARCO_ARRIBA");
   wireMa("ma-index",          "INDEX_NEXT");
 
-  // ----- pantalla MENÚ -----
+  // --- Pantalla MENÚ ---
   $("mn-back").onclick=closeMenuScreen;
   $("mn-open-settings").onclick=function(){ closeMenuScreen(); openSettings(); };
   $("mn-open-manual2").onclick=function(){ closeMenuScreen(); openManual(); };
@@ -1174,7 +1087,7 @@
       if(isRunning()) return;
       var sd=b.getAttribute("data-s");
       run("SET_CYCLE ESPERA="+sd);
-      st.vars=st.vars||{}; st.vars.espera_derecha=(sd==="DERECHA")?1:0;  // refleja ya; el save_variables real lo confirma
+      st.vars=st.vars||{}; st.vars.espera_derecha=(sd==="DERECHA")?1:0;  // actualización optimista; save_variables la confirma
       renderMenuScreen();
     };
   });
@@ -1182,7 +1095,7 @@
     b.onclick=function(){ setLang(b.getAttribute("data-l")); };
   });
 
-  // ----- pantalla AJUSTES -----
+  // --- Pantalla AJUSTES ---
   $("ag-back").onclick=closeSettings;
   $("ag-save").onclick=function(){
     var parts=[];
@@ -1196,8 +1109,8 @@
       pos[p.key]=num(btn.textContent,p.def);
       parts.push(p.set+"="+pos[p.key]);
     });
-    // Misma regla que SET_CYCLE en Klipper (que es la guarda de verdad): aqui
-    // solo se avisa en pantalla, porque un error de Klipper no se ve en la UI.
+    // La guarda real está en SET_CYCLE; se repite aquí porque los errores de
+    // Klipper no se muestran en esta interfaz.
     if(pos.squeegee_up<=pos.squeegee_down){
       showModal('<h2>'+t("ag_sq_err_title")+'</h2><p>'+t("ag_sq_err")+'</p><button class="mbtn" id="ag-err-ok">OK</button>');
       $("ag-err-ok").onclick=closeModal;
@@ -1207,10 +1120,9 @@
     closeSettings();
   };
 
-  // PARO DE EMERGENCIA (feature 010): RESET_ESTOP solo apaga el aviso; no
-  // reenergiza ni homea (eso lo sigue haciendo HOME/HOME_OP a proposito).
-  // En shutdown la unica salida es FIRMWARE_RESTART (Klipper no sale del
-  // shutdown de ninguna otra forma). run() no sirve: el gcode esta rechazado.
+  // Paro de emergencia: RESET_ESTOP solo retira el aviso; no reenergiza ni
+  // homea, eso queda para HOME. En shutdown la única salida es
+  // FIRMWARE_RESTART, y no puede enviarse con run() porque Klipper rechaza gcode.
   estopResetBtn.onclick=function(){
     if(estopResetBtn.disabled) return;
     st.estopLatch=0;
@@ -1240,7 +1152,7 @@
     if(!mnView.classList.contains("hidden")) renderMenuScreen();
     if(!agView.classList.contains("hidden")) renderSettings(); }
 
-  // ----- teclado META -----
+  // --- Teclado de META ---
   function openKeypad(){
     var buf=(num(uiTarget,0)===0)?"":String(uiTarget);
     var rows=""; var keys=["1","2","3","4","5","6","7","8","9"];
@@ -1262,10 +1174,9 @@
     $("kp-ok").onclick=function(){ uiTarget=(buf===""?0:parseInt(buf,10)); run("SAVE_VARIABLE VARIABLE=ui_target VALUE="+uiTarget); closeModal(); render(); };
   }
 
-  // ----- teclado numérico genérico (pantalla AJUSTES) -----
-  // Como openKeypad() pero reutilizable para cualquier campo: título, valor
-  // inicial, min/max (con clamp al aceptar) y callback propios. openKeypad()
-  // se deja intacta para no tocar el flujo ya probado de la meta de ciclos.
+  // --- Teclado numérico genérico (AJUSTES) ---
+  // Admite título, valor inicial, min/max (se recorta al aceptar), signo
+  // negativo si min < 0 y callback de aceptación.
   function openNumpad(opts){
     var buf=(opts.value===undefined||opts.value===null)?"":String(opts.value);
     var allowNeg=(opts.min!==undefined&&opts.min<0);
@@ -1319,7 +1230,7 @@
     $("st-close").onclick=closeModal;
   }
 
-  // ----- estado desde Moonraker -----
+  // --- Estado recibido de Moonraker ---
   function applyStatus(s){ if(!s) return;
     if(s.toolhead&&typeof s.toolhead.homed_axes==="string") st.homed=s.toolhead.homed_axes;
     var cs=s["gcode_macro _CYCLE_STATE"]; if(cs){ if(cs.running!==undefined) st.running=cs.running; if(cs.count!==undefined) st.count=cs.count; if(cs.target!==undefined) st.target=cs.target; if(cs.stop_req!==undefined) st.stopReq=cs.stop_req; }
@@ -1342,25 +1253,24 @@
     if(es){
       if(es.active!==undefined) st.estopActive=es.active;
     }
-    // El estado del boton llega por el objeto del gcode_button, no por
-    // _ESTOP.fisico: la variable del macro la escribe press_gcode, que espera
-    // al mutex del gcode (hasta ~5s con un ciclo en marcha). last_state no.
+    // El estado del botón se lee del gcode_button y no de _ESTOP.fisico: esa
+    // variable la escribe press_gcode, que espera al mutex de gcode (hasta
+    // ~5 s con un ciclo en marcha).
     var eb=s["gcode_button paro_emergencia"];
     if(eb&&eb.state!==undefined){
       st.estopBoton=(eb.state==="PRESSED")?1:0;
       st.estopFisico=st.estopBoton;
-      // Enclavamiento local: una vez visto el paro, el aviso no se va solo
-      // aunque suelten el boton antes de que PARO_EMERGENCIA llegue a correr.
+      // Enclavamiento local: el aviso se mantiene aunque se suelte el botón
+      // antes de que PARO_EMERGENCIA llegue a ejecutarse.
       if(st.estopBoton===1) st.estopLatch=1;
     }
-    // feature 012: posicion del marco (0 DESCONOCIDA / 1 ARRIBA / 2 ABAJO).
     var ma=s["gcode_macro _MARCO"];
     if(ma){
       if(ma.homed!==undefined) st.marcoHomed=ma.homed;
       if(ma.pos!==undefined) st.marcoPos=ma.pos;
     }
-    // gcode_position llega como namedtuple -> array por JSON ([x,y,z,e]), asi
-    // que se lee defensivo: puede venir como objeto {x:...} o como [x,...].
+    // gcode_position es un namedtuple en Klipper: según la serialización llega
+    // como array [x,y,z,e] o como objeto {x:...}.
     var gm=s.gcode_move;
     if(gm&&gm.gcode_position!==undefined){
       var p=gm.gcode_position;

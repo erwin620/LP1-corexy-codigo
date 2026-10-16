@@ -1,16 +1,12 @@
-# Tema de arranque de la maquina de serigrafia (feature 008, 2026-08-19)
+# Tema de arranque de la máquina de serigrafía.
 #
-# Una sola imagen fija, centrada, sin animacion ni texto: es lo que pidio
-# Erwin y es lo correcto para una maquina de produccion. Nada de barras de
-# progreso ni mensajes que el cliente no debe ver.
+# Una sola imagen fija y centrada, sin animación, barras de progreso ni
+# mensajes del sistema.
 #
-# La imagen es 1024x600 y el monitor tambien (card1-HDMI-A-1), asi que se
-# dibuja PIXEL A PIXEL. El centrado de abajo es por si algun dia cambia el
-# monitor: con otra resolucion la imagen queda centrada en vez de deformada.
-# NO se escala a proposito: escalar una imagen de marca la vuelve borrosa.
+# La imagen mide 1024x600, igual que el monitor, así que se dibuja píxel a
+# píxel. Con otra resolución queda centrada sobre fondo negro; no se escala a
+# propósito, porque escalar una imagen de marca la vuelve borrosa.
 
-# Fondo negro. Con el monitor actual no se ve (la imagen lo cubre entero),
-# pero si algun dia el monitor fuera mayor, el borde queda negro y limpio.
 Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
 Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
 

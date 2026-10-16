@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Valida las macros de pi-config/ como lo haria Klipper.
+"""Valida las macros de Klipper de pi-config/ sin necesidad de la máquina.
 
 Uso:   python pi-config/tests/validar_macros.py pi-config
 
-NO sustituye a la prueba en maquina: no sabe de mecanica, de pasos perdidos
-ni de StallGuard. Sirve para no subir a la Pi algo que ni siquiera arranca,
-o que mueve un eje al reves (ver el bug del signo, feature 011).
+Qué comprueba:
+1) Que todas las plantillas Jinja de los campos gcode: compilan.
+2) Que las macros del ciclo, del marco, del carrusel y de la pantalla manual,
+   renderizadas con un objeto 'printer' simulado, emiten (o no emiten) los
+   comandos esperados, incluido el sentido de cada movimiento.
 
-1) Compila TODAS las plantillas jinja de los campos gcode: (sintaxis).
-2) Renderiza las macros tocadas por la feature 011 con un 'printer' falso,
-   comprobando que emiten (o no emiten) los comandos esperados.
+Qué no comprueba: mecánica, pasos perdidos ni StallGuard. No sustituye a la
+prueba en máquina; sirve para no desplegar algo que no arranca o que mueve un
+eje en sentido contrario.
 
-Klipper crea el entorno asi (klippy/extras/gcode_macro.py):
+El entorno Jinja replica el de Klipper (klippy/extras/gcode_macro.py):
     jinja2.Environment('{%', '%}', '{', '}', extensions=['jinja2.ext.do'])
 """
 import sys, os, configparser
@@ -44,8 +46,8 @@ BASE_CTX = {
     'rawparams': '',
 }
 
-# ---------- 1. cargar todas las macros ----------
-macros = {}      # nombre -> texto del campo gcode
+# Carga de macros y de sus variable_*
+macros = {}      # nombre -> (archivo, texto del campo gcode)
 variables = {}   # nombre -> {var: valor}
 files = [f for f in os.listdir(CFG) if f.endswith('.cfg')]
 for fn in sorted(files):
@@ -67,7 +69,7 @@ for fn in sorted(files):
                     val = raw
                 variables[name][opt[len('variable_'):]] = val
 
-# ---------- 2. compilar todas (sintaxis) ----------
+# Compilación de todas las plantillas
 errores = 0
 for name, (fn, src) in sorted(macros.items()):
     try:
@@ -80,9 +82,9 @@ print('[1] compiladas %d macros de %d archivos -> %d errores de sintaxis'
 if errores:
     sys.exit(1)
 
-# ---------- 3. render con un printer falso ----------
+# Renderizado con un objeto 'printer' simulado
 class Obj(dict):
-    """dict accesible por atributo, como los objetos de status de Klipper."""
+    """Diccionario accesible por atributo, como los objetos de estado de Klipper."""
     def __getattr__(self, k):
         try:
             return self[k]
@@ -91,14 +93,17 @@ class Obj(dict):
 
 def printer_falso(save_vars, marco_homed=1, index_homed=1, running=0,
                   homed_axes='xy', marco_pos=1, x=280.0):
-    """marco_pos: 0 = DESCONOCIDA, 1 = ARRIBA, 2 = ABAJO (feature 012).
-    x: posicion del squeegee en el sistema de coordenadas del gcode; 280 es
-    el tope de arriba (position_endstop de stepper_x)."""
+    """Construye el estado de Klipper que leen las macros.
+
+    marco_pos: 0 = desconocida, 1 = arriba, 2 = abajo.
+    x: posición del squeegee en coordenadas G-code; 280 es el tope superior
+    (position_endstop de stepper_x).
+    """
     p = Obj()
     p['save_variables'] = Obj(variables=Obj(save_vars))
     p['toolhead'] = Obj(homed_axes=homed_axes)
-    # gcode_move.gcode_position es lo que leen las guardas del squeegee: es el
-    # sistema de coordenadas de los G1 X, no la posicion cruda del toolhead.
+    # Las guardas del squeegee leen gcode_move.gcode_position (coordenadas de
+    # los G1 X), no la posición interna del toolhead.
     p['gcode_move'] = Obj(gcode_position=Obj(x=x, y=0.0, z=0.0, e=0.0))
     for nombre, vars_ in variables.items():
         p['gcode_macro ' + nombre] = Obj(vars_)
@@ -178,12 +183,12 @@ check('feature 014: SET_CYCLE ESPERA=DERECHA guarda espera_derecha=1 y NO toca s
 sal = cmds(render('SET_CYCLE', printer_falso(VARS_OFF), params={'ESPERA': 'IZQUIERDA'}))
 check('feature 014: SET_CYCLE ESPERA=IZQUIERDA guarda espera_derecha=0',
       'SAVE_VARIABLE VARIABLE=espera_derecha VALUE=0' in sal, repr(sal))
-# Con espera DERECHA el sentido del stroke NO cambia: embarre a 100, imprime a 0.
+# Con espera a la derecha el sentido del stroke no cambia: embarre a 100, impresión a 0.
 pfd = printer_falso(dict(VARS_OFF, espera_derecha=1))
 solo_y = [' '.join(c.split()[:2]) for c in cmds(render('_EMBARRAR', pfd)) + cmds(render('_IMPRIMIR_PASADA', pfd)) if c.startswith('G1 Y')]
 check('feature 014: ESPERA DERECHA no invierte el stroke (embarre a Y100, imprime a Y0)',
       solo_y == ['G1 Y100.0', 'G1 Y0.0'], repr(solo_y))
-# ---- feature 015: marco y squeegee a la vez -------------------------------
+# Marco y squeegee se mueven a la vez cuando el marco participa en el ciclo.
 def pasada(**extra):
     pf = printer_falso(dict(VARS_ON, **extra), marco_homed=1)
     return [' '.join(c.split(';')[0].split()) for c in cmds(render('_IMPRIMIR_PASADA', pf)) if c != 'G90']
@@ -198,7 +203,7 @@ check('feature 015: con MARCO=SI es lo NORMAL (sin interruptor): marco encolado 
 sal = pasada(marco_speed=50.0)
 check('feature 015: guarda de tiempos: marco demasiado lento -> cae a SECUENCIAL y avisa',
       [c for c in sal if not c.startswith('M118')] == SECUENCIAL and any(c.startswith('M118 AVISO') for c in sal), repr(sal))
-# El sentido de "arriba" sale de stepper_x, no se asume: con el home al MINIMO el tramo de salida va hacia numeros MAS BAJOS.
+# El sentido de "arriba" se deduce de stepper_x: con el home en el mínimo, el tramo de salida va hacia valores menores.
 pf = printer_falso(dict(VARS_ON, squeegee_up=-280.0, squeegee_down=125.0), marco_homed=1, x=-280.0)
 pf['configfile']['settings']['stepper_x'] = Obj(position_endstop=-300.0, position_min=-300.0, position_max=300.0)
 sal = [' '.join(c.split(';')[0].split()) for c in cmds(render('_IMPRIMIR_PASADA', pf))]
@@ -277,9 +282,8 @@ except RaiseError as e:
     check('START arranca con el marco sin home cuando MARCO=NO', False, str(e))
 
 print('\n[3] comportamiento con el marco ENCENDIDO (MARCO=SI)')
-# Desde la feature 012 el movimiento vive en _MARCO_GO_*, asi que estas dos
-# solo delegan. Se comprueban las dos cosas: que delegan, y que lo que hay al
-# otro lado emite EXACTAMENTE el mismo movimiento que emitian ellas antes.
+# _MARCO_BAJAR y _MARCO_SUBIR delegan el movimiento en _MARCO_GO_*: se comprueba
+# la delegación y el movimiento exacto que emite cada destino.
 sal = cmds(render('_MARCO_BAJAR', printer_falso(VARS_ON, marco_homed=1)))
 check('_MARCO_BAJAR delega en _MARCO_GO_ABAJO', sal == ['_MARCO_GO_ABAJO'], repr(sal))
 sal = cmds(render('_MARCO_SUBIR', printer_falso(VARS_ON, marco_homed=1)))
@@ -323,7 +327,7 @@ check('el movimiento del marco respeta los valores guardados por el operador',
 sal = cmds(render('_MARCO_GO_ARRIBA', printer_falso(dict(VARS_ON, marco_arriba=-2.0))))
 check('marco_arriba negativo deja margen antes de la pared',
       'MOVE=-2.0' in ' '.join(sal), repr(sal))
-# El techo anti-tecleo se movio a _MARCO_GO_ABAJO con el refactor: sigue vivo.
+# Límite máximo de bajada del marco, contra valores mal tecleados.
 try:
     render('_MARCO_GO_ABAJO', printer_falso(dict(VARS_ON, marco_abajo=999.0)))
     check('el movimiento del marco rechaza pasar del techo abajo_max', False, 'no lanzo error')
@@ -378,7 +382,7 @@ except RaiseError:
 
 print('\n[5] feature 012 - pantalla MANUAL')
 
-# --- requisito: MARCO_ABAJO/MARCO_ARRIBA mueven SIEMPRE, tambien con MARCO=NO ---
+# Los botones manuales del marco funcionan aunque el marco no participe en el ciclo.
 sal = cmds(render('MARCO_ABAJO', printer_falso(VARS_OFF, marco_homed=1)))
 check('MARCO_ABAJO mueve aunque marco_en_ciclo=0 (los botones siempre funcionan)',
       sal == ['_MARCO_GO_ABAJO', 'M118 Marco abajo.'], repr(sal))
@@ -393,12 +397,12 @@ try:
 except RaiseError:
     check('MARCO_ABAJO se rechaza con el ciclo en marcha', True)
 
-# --- equivalencia manual <-> automatico: mismas 4 lineas del ciclo (_EMBARRAR + _IMPRIMIR_PASADA) ---
+# Cada paso manual emite el mismo movimiento que su paso en el ciclo automático.
 ciclo = ciclo_completo(printer_falso(VARS_OFF))
 g_ciclo = [c.split(';')[0].strip() for c in ciclo if c not in ('G90',) and not c.startswith('_MARCO')]
 norm = lambda s: ' '.join(s.split())
 manual_esperado = {
-    'MANUAL_STROKE_OUT':     g_ciclo[0],   # paso 1: viaje en vacio
+    'MANUAL_STROKE_OUT':     g_ciclo[0],   # paso 1: viaje en vacío
     'MANUAL_SQUEEGEE_DOWN':  g_ciclo[1],   # paso 2
     'MANUAL_STROKE_IN':      g_ciclo[2],   # paso 3: la pasada que imprime
 }
@@ -409,15 +413,15 @@ for macro, esperado in manual_esperado.items():
     check(macro + ' emite el MISMO movimiento que su paso de PRINT_CYCLE',
           len(g) == 1 and norm(g[0]) == norm(esperado),
           repr(g) + ' vs ' + repr(esperado))
-# Paso 4: desde 2026-09-25 MANUAL_SQUEEGEE_UP delega en _SQUEEGEE_A_ARRIBA
-# (nunca baja). Desde abajo tiene que emitir el mismo G1 que PRINT_CYCLE.
+# Paso 4: MANUAL_SQUEEGEE_UP delega en _SQUEEGEE_A_ARRIBA, que nunca baja.
+# Desde abajo debe emitir el mismo G1 que PRINT_CYCLE.
 sal = cmds(render('MANUAL_SQUEEGEE_UP', p_manual_ok))
 check('MANUAL_SQUEEGEE_UP delega en _SQUEEGEE_A_ARRIBA', '_SQUEEGEE_A_ARRIBA' in sal, repr(sal))
 g = [c for c in cmds(render('_SQUEEGEE_A_ARRIBA', printer_falso(VARS_OFF, x=-125.0))) if c.startswith('G1 ')]
 check('_SQUEEGEE_A_ARRIBA desde abajo emite el MISMO movimiento que el paso 4 de PRINT_CYCLE',
       len(g) == 1 and norm(g[0]) == norm(g_ciclo[3]), repr(g) + ' vs ' + repr(g_ciclo[3]))
 
-# --- guardas de las 4 macros manuales ---
+# Guardas de las macros manuales.
 for macro in list(manual_esperado) + ['MANUAL_SQUEEGEE_UP']:
     try:
         render(macro, printer_falso(VARS_OFF, running=1))
@@ -430,7 +434,7 @@ for macro in list(manual_esperado) + ['MANUAL_SQUEEGEE_UP']:
     except RaiseError as e:
         check(macro + ' se rechaza sin HOME', 'HOME' in str(e))
 
-# --- MANUAL_SQUEEGEE_DOWN: solo baja con el marco ABAJO de verdad ---
+# MANUAL_SQUEEGEE_DOWN solo baja con el marco confirmado abajo.
 try:
     render('MANUAL_SQUEEGEE_DOWN', printer_falso(VARS_OFF, marco_pos=1))
     check('MANUAL_SQUEEGEE_DOWN se rechaza con el marco ARRIBA', False, 'no lanzo error')
@@ -445,21 +449,21 @@ sal = cmds(render('MANUAL_SQUEEGEE_DOWN', printer_falso(VARS_OFF, marco_pos=2, m
 check('MANUAL_SQUEEGEE_DOWN baja con el marco ABAJO confirmado',
       any(c.startswith('G1 X') for c in sal), repr(sal))
 
-# --- las dos de stroke: rechazadas con squeegee abajo + marco no confirmado abajo ---
+# El stroke manual se rechaza con el squeegee abajo si el marco no está confirmado abajo.
 for macro in ('MANUAL_STROKE_OUT', 'MANUAL_STROKE_IN'):
     try:
-        render(macro, printer_falso(VARS_OFF, marco_pos=1, x=-125.0))  # squeegee_down real de VARS_OFF
+        render(macro, printer_falso(VARS_OFF, marco_pos=1, x=-125.0))  # squeegee_down de VARS_OFF
         check(macro + ' se rechaza con el squeegee ABAJO y el marco no abajo', False, 'no lanzo error')
     except RaiseError as e:
         check(macro + ' se rechaza con el squeegee ABAJO y el marco no abajo', 'bloqueado' in str(e).lower())
-    sal = cmds(render(macro, printer_falso(VARS_OFF, marco_pos=1, x=280.0)))  # squeegee arriba: no pregunta
+    sal = cmds(render(macro, printer_falso(VARS_OFF, marco_pos=1, x=280.0)))  # squeegee arriba: sin restricción
     check(macro + ' no pregunta nada con el squeegee ARRIBA',
           any(c.startswith('G1 Y') for c in sal), repr(sal))
     sal = cmds(render(macro, printer_falso(VARS_OFF, marco_pos=2, x=-125.0)))  # squeegee abajo, marco abajo: permitido
     check(macro + ' se permite con squeegee ABAJO y marco ABAJO (flujo normal)',
           any(c.startswith('G1 Y') for c in sal), repr(sal))
 
-# --- guarda del marco en INDEX_NEXT / INDEX_GOTO ---
+# El plato no gira con el marco abajo.
 try:
     render('INDEX_NEXT', printer_falso(VARS_OFF, index_homed=1, marco_pos=2))
     check('INDEX_NEXT se rechaza con el marco ABAJO', False, 'no lanzo error')
@@ -474,7 +478,7 @@ try:
 except RaiseError as e:
     check('INDEX_GOTO se rechaza con el marco ABAJO', 'MARCO' in str(e))
 
-# --- guardas de START (requisito 5): bloqueo por marco/squeegee en posicion manual ---
+# START no arranca si el marco o el squeegee quedaron abajo tras un movimiento manual.
 try:
     render('START', printer_falso(VARS_OFF, marco_pos=2), params={})
     check('START se rechaza con el marco ABAJO', False, 'no lanzo error')
@@ -487,7 +491,7 @@ except RaiseError as e:
     sal_ok = False
 check('START NO se bloquea con el marco DESCONOCIDO (no regresion de MARCO=NO)', sal_ok)
 try:
-    render('START', printer_falso(VARS_OFF, marco_pos=1, x=-125.0), params={})  # squeegee_down real
+    render('START', printer_falso(VARS_OFF, marco_pos=1, x=-125.0), params={})  # squeegee_down de VARS_OFF
     check('START se rechaza con el SQUEEGEE abajo', False, 'no lanzo error')
 except RaiseError as e:
     check('START se rechaza con el SQUEEGEE abajo', 'SQUEEGEE' in str(e))
@@ -499,11 +503,9 @@ except RaiseError as e:
 check('START arranca con marco ARRIBA y squeegee ARRIBA (caso normal)', sal_ok)
 
 print('\n[6] lint: el bug del signo en jinja no debe volver a colarse')
-# Klipper crea el entorno jinja con { y } como delimitadores de variable (no
-# las dobles llaves habituales), asi que un '-' pegado a la llave de apertura
-# es el marcador de control de espacios en blanco, NO un signo menos, y
-# MOVE={-1.0 * x} renderiza POSITIVO sin dar ningun error (ver macros_marco.cfg
-# y el plan de la feature 011). Cazado aqui de una vez por todas.
+# Klipper usa { y } como delimitadores de variable en Jinja, así que un '-'
+# pegado a la llave de apertura es el control de espacios en blanco, no un
+# signo menos: MOVE={-1.0 * x} renderiza el valor positivo sin dar error.
 sospechosas = []
 for name, (fn, src) in sorted(macros.items()):
     if '{-' in src:
@@ -512,7 +514,7 @@ check('ninguna macro tiene un "-" pegado a la llave de apertura ({-)',
       not sospechosas, repr(sospechosas))
 
 print('\n[7] "subir el squeegee" nunca lo baja (bug de AJUSTES, 2026-09-25)')
-# El caso real: tope en 280, squeegee_up guardado en 25 desde AJUSTES.
+# Tope en 280 con squeegee_up mal configurado en 25.
 VARS_MAL = dict(VARS_OFF, squeegee_up=25.0, squeegee_down=30.0)
 sal = cmds(render('_SQUEEGEE_A_ARRIBA', printer_falso(VARS_MAL, x=280.0)))
 check('_SQUEEGEE_A_ARRIBA NO baja desde el tope aunque squeegee_up este mal', sal == [], repr(sal))
@@ -568,7 +570,7 @@ check('MARCO_HOME usa el driver_SGT de printer.cfg (no un 6 fijo)',
 sal = cmds(render('MARCO_HOME', printer_falso(VARS_OFF), params={'SGT': '3'}))
 check('MARCO_HOME acepta SGT= para bisectar en caliente',
       'SET_TMC_FIELD STEPPER=marco FIELD=sgt VALUE=3' in sal, repr(sal))
-# _cycle_loop es un delayed_gcode, no una macro: se lee del archivo a mano.
+# _cycle_loop es un delayed_gcode y se carga directamente de macros_ciclo.cfg.
 cp = configparser.RawConfigParser(strict=False, inline_comment_prefixes=(';', '#'))
 cp.read(os.path.join(CFG, 'macros_ciclo.cfg'), encoding='utf-8')
 pf = printer_falso(VARS_OFF)

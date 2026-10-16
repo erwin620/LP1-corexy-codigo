@@ -3,30 +3,26 @@ PROFILE="/home/aspe/.config/kiosk-chromium"
 PREF="$PROFILE/Default/Preferences"
 SPLASH="/usr/share/plymouth/themes/serigrafia/splash.png"
 mkdir -p "$PROFILE"
+# Tras un corte de corriente Chromium ofrecería restaurar la sesión; se marca
+# el perfil como cerrado correctamente para que el kiosco arranque limpio.
 if [ -f "$PREF" ]; then
   sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$PREF"
 fi
 
-# ---------------------------------------------------------------------------
-# SPLASH MIENTRAS ARRANCA CHROMIUM  (feature 008, 2026-08-19)
-# ---------------------------------------------------------------------------
-# MEDIDO en el journal: cage abre sesion a los 14.06 s y Chromium no mapea su
-# ventana hasta los 18.68 s. En esos ~4.6 s cage pinta NEGRO, y era el unico
-# negro que seguia viendose (Erwin: "el negro es antes de la interfaz").
+# Pantalla de arranque mientras Chromium abre su ventana.
 #
-# imv-wayland muestra LA MISMA imagen que plymouth como ventana normal. Cuando
-# Chromium mapea, cage lo dibuja encima y el relevo no se nota.
+# Entre el inicio de la sesión de cage y el primer frame de Chromium pasan
+# unos 4-5 s en los que cage pinta negro. imv-wayland muestra la misma imagen
+# que Plymouth como ventana normal; cuando Chromium mapea, cage lo dibuja
+# encima y el relevo no se nota.
 #
-# swaybg NO SIRVE, aunque parezca la herramienta obvia: necesita el protocolo
-# wlr-layer-shell y cage NO lo implementa. Probado contra la sesion viva:
-#   "Missing a required Wayland interface"
+# swaybg no sirve: requiere el protocolo wlr-layer-shell, que cage no
+# implementa ("Missing a required Wayland interface").
 #
-# OJO CON EL NOMBRE DEL BINARIO: el paquete se llama 'imv' pero el ejecutable es
-# 'imv-wayland' (tambien trae imv-x11). Llamar a 'imv' da "No such file".
+# El paquete se llama 'imv', pero el ejecutable Wayland es 'imv-wayland'.
 #
-# No se intenta matarlo "cuando Chromium pinte" porque no hay forma fiable de
-# detectarlo desde aqui; se mata por tiempo, cuando ya lleva mucho tapado.
-# ---------------------------------------------------------------------------
+# No hay forma fiable de detectar desde aquí cuándo Chromium ya pintó, así que
+# el visor se cierra por tiempo, con margen de sobra.
 if [ -r "$SPLASH" ] && command -v imv-wayland >/dev/null 2>&1; then
   imv-wayland -f -b "#000000" -s full "$SPLASH" &
   IMV_PID=$!
