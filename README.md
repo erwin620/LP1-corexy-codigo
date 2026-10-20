@@ -132,10 +132,6 @@ Some of the problems solved during development:
 
 The live configuration runs on the Raspberry Pi in `~/printer_data/config/`; `pi-config/` is its version-controlled copy and is deployed to the machine after every change.
 
-## Roadmap
-
-- Hardware power cut on the emergency stop: wire the button's NC contact in series with the 24 V driver supply, so the stop no longer depends on the controller.
-- Calibrate squeegee and frame travel in real millimetres.
 
 ## Tech stack
 
