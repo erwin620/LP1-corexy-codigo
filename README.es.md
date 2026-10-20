@@ -4,8 +4,6 @@
 
 Sistema de control de una máquina de serigrafía automática comercial con cabeza de impresión CoreXY, carrusel de 4 estaciones y cinco ejes de motores paso a paso. Toda la máquina la gobierna una **Raspberry Pi 5 con Klipper**, conectada por USB a una placa **BTT Octopus V1.1** (STM32), con una interfaz táctil propia para el operador.
 
-El proyecto sustituyó una arquitectura anterior basada en firmware Marlin, un secuenciador Teensy/ESP32 y una HMI Wecon por una única plataforma de control definida por software.
-
 ## Demostración
 
 
