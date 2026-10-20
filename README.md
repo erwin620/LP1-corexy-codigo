@@ -4,7 +4,6 @@
 
 Control system for a commercial automatic screen printing machine with a CoreXY print head, a 4-station carousel and five stepper axes. The whole machine is driven by a **Raspberry Pi 5 running Klipper**, connected over USB to a **BTT Octopus V1.1** (STM32) board, with a custom touchscreen interface for the operator.
 
-The project replaced an earlier architecture based on Marlin firmware, a Teensy/ESP32 sequencer and a Wecon HMI with a single, fully software-defined control stack.
 
 ## Demo
 
