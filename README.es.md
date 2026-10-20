@@ -135,10 +135,6 @@ Algunos de los problemas resueltos durante el desarrollo:
 
 La configuración en uso corre en la Raspberry Pi, en `~/printer_data/config/`; `pi-config/` es su copia bajo control de versiones y se despliega a la máquina tras cada cambio.
 
-## Próximos pasos
-
-- Corte de potencia por hardware en el paro de emergencia: cablear el contacto NC del botón en serie con la alimentación de 24 V de los drivers, para que la parada no dependa del controlador.
-- Calibrar el recorrido del squeegee y del marco en milímetros reales.
 
 ## Tecnologías
 
